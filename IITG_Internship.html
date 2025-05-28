@@ -1,0 +1,1434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Internship Report</title>
+    <link rel="stylesheet" href="css/scripts.css">
+    
+    <!-- MathJax for LaTeX math rendering -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+    </script>
+    <script src="js/scripts.js"></script>
+    <script>
+    // Section navigation sidebar with collapsible feature and subsections
+    document.addEventListener("DOMContentLoaded", function() {
+        // Sidebar navigation sections
+        const sections = [
+            {id: "qm-intro", label: "Introduction"},
+            {id: "qm-density", label: "Density Matrix", subsections: [
+                {id: "qm-density-pure", label: "Pure States"},
+                {id: "qm-density-mixed", label: "Mixed States"},
+                {id: "qm-density-properties", label: "Properties"},
+                {id: "qm-density-bloch", label: "Bloch Representation"},
+                {id: "qm-density-purity", label: "Purity"}
+            ]},
+            {id: "qm-evolution", label: "Time Evolution", subsections: [
+                {id: "qm-evolution-vn", label: "Von Neumann Equation"}
+            ]},
+            {id: "qm-hamiltonian", label: "General Hamiltonian", subsections: [
+                {id: "qm-hamiltonian-eigen", label: "Eigenstates & Energies"}
+            ]},
+            {id: "qm-thermo", label: "Quantum Thermodynamics", subsections: [
+                {id: "qm-thermo-energy", label: "Internal Energy"},
+                {id: "qm-thermo-firstlaw", label: "First Law"},
+                {id: "qm-thermo-alicki", label: "Conventional Approach"}
+            ]},
+            {id: "qm-master-eq", label: "Master Equation", subsections: [
+                {id: "qm-master-eq-derivation", label: "Born, Markovian, RWA Approximation"},
+            ]},
+            {id: "qm-application", label: "Applications", subsections: [
+                {id: "qm-application-simple", label: "Simple Application"},
+                {id: "qm-application-driven", label: "Driven TLS"},
+                {id: "qm-application-thermo", label: "Thermodynamics"}
+            ]},
+            {id: "qm-references", label: "References"}
+        ];
+
+        // Show the side navigation panel and implement toggle
+        const nav = document.getElementById('section-nav');
+        const sideNavToggle = document.getElementById('side-nav-toggle');
+        // Ensure side nav is visible by default
+        nav.classList.remove('closed');
+
+        // Toggle side nav open/close
+        sideNavToggle.addEventListener('click', function(e) {
+            e.stopPropagation();
+            nav.classList.toggle('closed');
+            // Move toggle button position
+            if (nav.classList.contains('closed')) {
+                sideNavToggle.style.left = '0px';
+                document.querySelector('.main-center').style.marginLeft = '0px';
+            } else {
+                sideNavToggle.style.left = '240px';
+                document.querySelector('.main-center').style.marginLeft = '220px';
+            }
+        });
+
+        // Section links container
+        let linksDiv = nav.querySelector('.section-nav-links');
+        if (!linksDiv) {
+            linksDiv = document.createElement('div');
+            linksDiv.className = 'section-nav-links';
+            nav.appendChild(linksDiv);
+        }
+        linksDiv.innerHTML = sections.map(s =>
+            `<a href="#${s.id}" id="nav-${s.id}">${s.label}</a>` +
+            (s.subsections ? s.subsections.map(sub =>
+                `<a href="#${sub.id}" class="subsection-link" id="nav-${sub.id}">${sub.label}</a>`
+            ).join('') : '')
+        ).join('');
+        // Highlight active section
+        function onScroll() {
+            let scrollPos = document.documentElement.scrollTop || document.body.scrollTop;
+            let lastId = null;
+            for (const s of sections) {
+                const el = document.getElementById(s.id);
+                if (el && el.offsetTop - 80 <= scrollPos) {
+                    lastId = s.id;
+                }
+                if (s.subsections) {
+                    for (const sub of s.subsections) {
+                        const subEl = document.getElementById(sub.id);
+                        if (subEl && subEl.offsetTop - 80 <= scrollPos) {
+                            lastId = sub.id;
+                        }
+                    }
+                }
+            }
+            // Remove all actives
+            sections.forEach(s => {
+                const link = document.getElementById('nav-' + s.id);
+                if (link) link.classList.remove('active');
+                if (s.subsections) {
+                    s.subsections.forEach(sub => {
+                        const sublink = document.getElementById('nav-' + sub.id);
+                        if (sublink) sublink.classList.remove('active');
+                    });
+                }
+            });
+            // Set active
+            if (lastId) {
+                const activeLink = document.getElementById('nav-' + lastId);
+                if (activeLink) activeLink.classList.add('active');
+            }
+        }
+        window.addEventListener('scroll', onScroll);
+        onScroll();
+
+        // Add anchors for Results subsections if not present
+        const placeholder = document.querySelector('.placeholder-section');
+        if (placeholder) {
+            if (!document.getElementById('results-table')) {
+                const tableSection = placeholder.querySelector('.section table');
+                if (tableSection) {
+                    const anchor = document.createElement('a');
+                    anchor.id = 'results-table';
+                    tableSection.parentNode.insertBefore(anchor, tableSection);
+                }
+            }
+            if (!document.getElementById('results-fig1')) {
+                const fig1 = placeholder.querySelector('img[src="Fig_1.png"]');
+                if (fig1) {
+                    const anchor = document.createElement('a');
+                    anchor.id = 'results-fig1';
+                    fig1.parentNode.insertBefore(anchor, fig1);
+                }
+            }
+            if (!document.getElementById('results-fig2')) {
+                const fig2 = placeholder.querySelector('img[src="Fig_2.png"]');
+                if (fig2) {
+                    const anchor = document.createElement('a');
+                    anchor.id = 'results-fig2';
+                    fig2.parentNode.insertBefore(anchor, fig2);
+                }
+            }
+        }
+    });
+    </script>
+</head>
+<body>
+    <!-- Sidebar nav, now using side-nav class -->
+    <nav id="section-nav" class="side-nav">
+        <!-- Section links will be injected here -->
+    </nav>
+    <!-- Toggle button outside sidebar -->
+    <button id="side-nav-toggle" class="side-nav-toggle" title="Collapse/Expand" style="position:absolute; top:1.2em; left:240px;">
+        &#9776;
+    </button>
+    <div class="main-center">
+        <div class="nav-links" style="margin-bottom:2.5em; margin-top:1.5em;">
+            <a href="index.html">Home</a>
+            <a href="blogs.html">Blogs</a>
+            <div class="dropdown">
+                <a href="report.html" class="dropbtn" style="position:relative; z-index:2;">Resources &#9662;</a>
+                <div class="dropdown-content">
+                    <a href="OIST_internship.html" style="display:block; padding:0.7em 1.2em; color:#4f46e5; text-decoration:none;">OIST Internship</a>
+                    <a href="IITG_Internship.html" style="display:block; padding:0.7em 1.2em; color:#4f46e5; text-decoration:none;">IITG Internship</a>
+                </div>
+            </div>
+            <!-- Remove JS-injected section dropdown -->
+        </div>
+        <div class="placeholder-section">
+            <!-- Internship Report Subpage -->
+            <div class="header"></div>
+            <h1 class="noindent">Quantum Master Equation and First Law of Thermodynamics of a Driven Two Level System</h1>
+
+            <div class="section" id="qm-intro">
+                    <h2 class="noindent">Introduction</h2>
+                    <p>
+                        Till now, we have worked with the Schr&#246;dinger equation of motion, which is an equation of motion of a closed system but can't express the open systems where systems are interacting with an environment. In reality, we can't isolate a system completely from the environment; there will be a minimum interaction with the environment, so we need a description of open quantum systems. Also, there is a question about the irreversibility of the system. Schr&#246;dinger equation describes the unitary time evolution of the system, but an open quantum system can't be represented by the unitary time evolution. The interaction between the system and environment will lead to a certain correlation that the system's time evolution, in general, is not unitary. This non-unitarity is responsible for the irreversibility. From the huge Hilbert space of the total system, we will only focus on the reduced dynamics of the system, which is very well done by the Quantum Master Equation. Here we will look at the Master Equation for Open Quantum System and some applications also to the Quantum Thermodynamics <a href="#ref-breuer2002theory" target="_self">[3]</a><a href="https://global.oup.com/academic/product/the-theory-of-open-quantum-systems-9780199213900" target="_blank" style="margin-left:2px;">&#128279;</a>.
+                    </p>
+                    <p>
+                        Now in classical thermodynamics we have the first law of thermodynamics dividing the total energy change during a process into the heat and work exchange. But somehow the division of heat and work in the quantum region is hard. In 1979, for the first time, R. Alicki defined the heat and work concepts for quantum thermodynamic systems in the weak coupling limit. This approach of defining the heat and work is sometimes called the conventional approach <a href="#ref-alicki1979quantum" target="_self">[8]</a><a href="https://doi.org/10.1088/0305-4470/12/5/007" target="_blank" style="margin-left:2px;">&#128279;</a>. There are many other definitions that have been put forward but we are only going to use the conventional method.
+                    </p>
+                </div>
+                <div class="section" id="qm-density">
+                    <h2 class="noindent">Density Matrix</h2>
+                    <p>
+                        We know that we can write down any state of the system as a superposition of the basis state of the Hamiltonian. This superposition is sometimes called Coherent Superposition. This type of state evolves with time unitarily. This type of state is called 'Pure States'. The system can be represented in another way also. We define Density Matrix for the pure state system as
+                    </p>
+                    <div class="math">\[
+                    \rho = \ket{\Psi} \bra{\Psi}
+                    \]</div>
+                    <p>
+                        For example, \( \ket{\Psi} = \frac{1}{\sqrt{2}}\ket{g} + \ket{e} \), then density matrix,
+                    </p>
+                    <div class="math">\[
+                    \rho = \ket{\Psi} \bra{\Psi} = \frac{1}{2} [\ket{e}\bra{e} + \ket{e}\bra{g} + \ket{g}\bra{e} + \ket{g}\bra{g}] = \begin{pmatrix}
+                    \frac{1}{2} & \frac{1}{2} \\
+                    \frac{1}{2} & \frac{1}{2}
+                    \end{pmatrix}
+                    \]</div>
+                    <p>
+                        So far, we have confined our discussion about the Density Matrix to an isolated or closed system. In general, the system always interacts with the surrounding. So we will now discuss those conditions. Now sometimes states can't be expressed as coherent superposition. For example, we have prepared one beam of the particles with \( \ket{e} \) and another beam of the particles with \( \ket{g} \), then we mix equally. Then density matrix can be written as
+                    </p>
+                    <div class="math">\[
+                    \rho = \frac{1}{2} \ket{e}\bra{e} + \frac{1}{2} \ket{g}\bra{g} = \begin{pmatrix}
+                    \frac{1}{2} & 0 \\
+                    0 & \frac{1}{2}
+                    \end{pmatrix}
+                    \]</div>
+                    <p>
+                        This is the statistical mixture of pure states. A statistical mixture of pure states leads to a mixed state. This density matrix is also known as a mixed state density matrix <a href="#ref-blum2012density" target="_self">[4]</a>.
+                    </p>
+                    <p>
+                        In general, density matrix can be described by
+                    </p>
+                    <div class="math">\[
+                    \rho = \sum_n P_n \ket{\psi_n} \bra{\psi_n}
+                    \]</div>
+                    <p>
+                        where \( P_n \) is the probability of getting the n-th state system from the ensemble. Expectation value of an operator in this Density Matrix formalism, defining the completeness relation,
+                    </p>
+                    <div class="math">\[
+                    \sum_n \ket{\psi_n}\bra{\psi_n} = I
+                    \]</div>
+                    <div class="math">\[
+                    \begin{aligned}
+                    \braket{\hat{\mathcal{O}}} &= \sum_n P_n \bra{\psi_n}\hat{\mathcal{O}}\ket{\psi_n} = \sum_{i,n} P_n \bra{\psi_n}\hat{\mathcal{O}}\ket{\psi_i}\bra{\psi_i}\ket{\psi_n}\\
+                    &= \sum_{i,n} P_n \bra{\psi_i}\ket{\psi_n}\bra{\psi_n}\hat{\mathcal{O}}\ket{\psi_i}\\
+                    &= \sum_i \bra{\psi_i}\sum_n P_n \ket{\psi_n}\bra{\psi_n} \hat{\mathcal{O}} \ket{\psi_i}\\
+                    &= \sum_i \bra{\psi_i} \rho \hat{\mathcal{O}} \ket{\psi_i}
+                    = \mathrm{Tr}\{\rho\hat{\mathcal{O}}\}
+                    \end{aligned}
+                    \]</div>
+                    <p>
+                        This is also true for the pure state Density Matrix. Properties of density matrix are:
+                    </p>
+                    <ol>
+                        <li>\(\rho\) is Hermitian, \( \rho = \rho^{\dagger} \).</li>
+                        <li>Diagonal elements of the density matrix represent the probability of getting a particle in a specific state.</li>
+                        <li>Trace of the Density Matrix is always 1, normalized. That is \( \mathrm{Tr}\{\rho\} = 1 \).</li>
+                        <li>Eigenvalues of \( \rho \) are real and have to be non-negative as probabilities can't be negative.</li>
+                    </ol>
+                    <p>
+                        For a case of system to be in the pure state, any arbitrary state of the Two Level System (TLS) can be written as,
+                    </p>
+                    <div class="math">\[
+                    \ket{\psi} = \cos{\frac{\phi}{2}} \ket{e} + \sin{\frac{\phi}{2}} e^{i\Phi} \ket{g}
+                    \]</div>
+                    <p>
+                        The density matrix becomes,
+                    </p>
+                    <div class="math" style="text-align:center;">
+                    \[
+                    \begin{aligned}
+                    \rho =& \frac{1}{2} \begin{pmatrix}
+                    1 + \cos{\phi} & \sin{\phi} \\
+                    \sin{\phi} & 1 - \cos{\phi}
+                    \end{pmatrix} \\
+                    =& \frac{1}{2} \begin{pmatrix}
+                    1 + \cos{\phi} & \sin{\phi} \cos{\Phi} - i \sin{\phi}\sin{\Phi} \\
+                    \sin{\phi} \cos{\Phi} + i \sin{\phi}\sin{\Phi} & 1 - \cos{\phi}
+                    \end{pmatrix}
+                    \end{aligned}
+                    \]
+                    </div>
+                    <p>
+                        If \( \hat{n} = (\sin{\phi} \cos{\Phi}, \sin{\phi}\sin{\Phi},  \cos{\phi}) \) is a unit vector, \( \sigma_x, \sigma_y, \sigma_z \) are the Pauli spin matrices, then we can write the density matrix as
+                    </p>
+                    <div class="math" style="text-align:center;">
+                    \[
+                    \rho = \frac{1}{2} (1 + \hat{n} \cdot \vec{\sigma})
+                    \]
+                    </div>
+                    <p>
+                        Let's write
+                    </p>
+                    <div class="math">\[
+                    \begin{aligned}
+                    \rho_{ee} &= \frac{1}{2} (1 + n_z) \\
+                    \rho_{gg} &= \frac{1}{2} (1 - n_z) \\
+                    \rho_{eg} &= \frac{1}{2} (n_x - in_y)
+                    \end{aligned}
+                    \]</div>
+                    <p>
+                        As a result we can write down with \( \vec{n} = (n_x, n_y, n_z) \) the density matrix as,
+                    </p>
+                    <div class="math">\[
+                    \rho = \frac{1}{2}\begin{pmatrix}
+                    1 + n_z & n_x - in_y\\
+                    n_x + in_y & 1 - n_z
+                    \end{pmatrix} = \frac{1}{2} (I + \vec{n} \cdot \vec{\sigma})
+                    \]</div>
+                    <p>
+                        \( \vec{n} \) can be written as \( \vec{n} = n\hat{n} \), \( n \) being the length of the vector, that is given by, \( n = \sqrt{n^2_x + n^2_y + n^2_z} \). From above,
+                    </p>
+                    <div class="math">\[
+                    n_x = 2 \mathrm{Re}(\rho_{eg}), \quad n_y = -2 \mathrm{Im}(\rho_{eg}), \quad n_z = \Delta
+                    \]</div>
+                    <p>
+                        Eigenvalues of the density matrix:
+                    </p>
+                    <div class="math">\[
+                    \lambda = \frac{1 \pm \sqrt{4|\rho_{eg}|^2 + \Delta^2}}{2}
+                    \]</div>
+                    <div class="math">\[
+                    |n| = \sqrt{n^2 + 4|\rho_{eg}|^2}
+                    \]</div>
+                    <div class="math">\[
+                    n_{\pm} = \frac{1}{2} (1 \pm n)
+                    \]</div>
+                    <p>
+                        and the density matrix takes diagonalized form as
+                    </p>
+                    <div class="math">\[
+                    \rho = \begin{pmatrix}
+                    \frac{1+n}{2} & 0 \\
+                    0 & \frac{1-n}{2}
+                    \end{pmatrix}
+                    \]</div>
+                    <p>
+                        with the eigenstates of the system/density matrix,
+                    </p>
+                    <div class="math">\[
+                    \begin{aligned}
+                    \ket{n_+} &= \cos{\frac{\phi}{2}} \ket{e} + \sin{\frac{\phi}{2}} e^{i\Theta} \ket{g} \\
+                    \ket{n_-} &= - \sin{\frac{\phi}{2}} e^{i\Theta} \ket{e} + \cos{\frac{\phi}{2}} \ket{g}
+                    \end{aligned}
+                    \]</div>
+                    <p>
+                        In this format we can write the density matrix as,
+                    </p>
+                    <div class="math">\[
+                    \rho = \frac{1}{2}\begin{pmatrix}
+                    1 + n\cos{\phi} & n\sin{\phi} e^{-i\Phi} \\
+                    n\sin{\phi} e^{i\Phi} & 1 - n\cos{\phi}
+                    \end{pmatrix}
+                    \]</div>
+                    <p>
+                        Then relations that will satisfy easily as given below,
+                    </p>
+                    <div class="math">\[
+                    \begin{aligned}
+                    1 + n\cos{\phi} &= \rho_{ee}, \quad n\sin{\phi} e^{-i\Phi} = \rho_{eg} \\
+                    1 - n\cos{\phi} &= \rho_{gg}, \quad n\sin{\phi} e^{i\Phi} = \rho_{ge}
+                    \end{aligned}
+                    \]</div>
+                    <div class="math">
+                    \[
+                    \cos\phi = \frac{\rho_{ee} - \rho_{gg}}{n} = \frac{\Delta}{n}
+                    \]
+                    </div>
+                    <p>
+                    where \( \Delta = \rho_{ee} - \rho_{gg} \) is called the <b>population inversion</b>.
+                    </p>
+                    <div class="math">\[
+                    4 |\rho_{eg}|^2 = n^2 \sin^2{\phi} \implies \sin{\phi} = \frac{2|\rho_{eg}|}{n}
+                    \]</div>
+                    <div class="math">\[
+                    e^{-i\Phi} = \frac{\rho_{eg}}{|\rho_{eg}|}
+                    \]</div>
+                    <p>
+                        Purity of the system/density matrix is measured by,
+                    </p>
+                    <div class="math">\[
+                    \mathcal{P} = \mathrm{Tr}(\rho^2) = \frac{1}{2}[1 + n^2]
+                    \]</div>
+                    <p>
+                        For the case of pure state we know that \( n = 1 \), so we can see that purity gives \( \mathcal{P} = 1 \). Similarly for the case \( n = 0 \), so we get the purity \( \mathcal{P} = \frac{1}{2} \).
+                    </p>
+                </div>
+                <div class="section" id="qm-evolution">
+                    <h2 class="noindent">Time Evolution of Density Matrix</h2>
+                    <p>
+                        If we consider a general system is in a mixed state, the corresponding statistical ensemble can be characterized by,
+                    </p>
+                    <div class="math">\[
+                    \rho(0) = \sum_n P_n \ket{\psi_n(0)} \bra{\psi_n(0)}
+                    \]</div>
+                    <p>
+                        After time \( t \), \( \rho(t) \) becomes
+                    </p>
+                    <div class="math">\[
+                    \rho(t) = \sum_n P_n \ket{\psi_n(t)} \bra{\psi_n(t)}
+                    \]</div>
+                    <p>
+                        Now we know that the time evolution of the wave function is a unitary process of a pure state. From quantum mechanics, the state vector \( \ket{\psi(t)} \) evolves in time according to the Schr&#246;dinger equation:
+                    </p>
+                    <div class="math">\[
+                    i\hslash \frac{\partial}{\partial t} \ket{\psi(t)} = H(t) \ket{\psi(t)}
+                    \]</div>
+                    <p>
+                        Where \( H(t) \) is the Hamiltonian. The time evolution of the wave function is a unitary transformation:
+                    </p>
+                    <div class="math">\[
+                    \ket{\psi(t)} = U(t) \ket{\psi(0)}
+                    \]</div>
+                    <p>
+                        Substituting in the Schr&#246;dinger equation subject to the initial condition \( U(0) = 1 \),
+                    </p>
+                    <div class="math">\[
+                    i\hslash \frac{\partial}{\partial t} U(t) = H(t) U(t)
+                    \]</div>
+                    <p>
+                        For the case of a time-independent Hamiltonian, the unitary transformation \( U(t) \) will be,
+                    </p>
+                    <div class="math">\[
+                    U(t) = e^{-i\frac{H}{\hbar}t}
+                    \]</div>
+                    <p>
+                        From above,
+                    </p>
+                    <div class="math">\[
+                    \begin{aligned}
+                    \rho(t) &= \sum_n P_n U(t)\ket{\psi_n(0)} \bra{\psi_n(0)}U^{\dagger}(t) \\
+                    &= U(t) \left( \sum_n P_n \ket{\psi_n(0)}\bra{\psi_n(0)} \right) U^{\dagger}(t) \\
+                    &= U(t) \rho(0) U^{\dagger}(t)
+                    \end{aligned}
+                    \]</div>
+                    <p>
+                        Differentiating this equation, we get the equation of motion for the density matrix,
+                    </p>
+                    <div class="math">\[
+                    \dot{\rho}(t) = \frac{1}{i\hbar}[H(t), \rho(t)]
+                    \]</div>
+                    <p>
+                        which is often referred to as the Von Neumann or Liouville-Von Neumann equation.
+                    </p>
+                </div>
+                <div class="section" id="qm-hamiltonian">
+                    <h2 class="noindent">General Hamiltonian</h2>
+                    <p>
+                        A general Hamiltonian two-level system can be written in a matrix form <a href="#ref-zeidler2007quantum" target="_self">[7]</a>.
+                    </p>
+                    <div class="math">\[
+                    H = \begin{pmatrix}
+                    h_{ee} & h_{eg}\\
+                    h_{ge} & h_{gg}
+                    \end{pmatrix}
+                    = \vec{h} \cdot \vec{\sigma}
+                    = h\begin{pmatrix}
+                    \cos\theta & \sin\theta e^{-i\Theta} \\
+                    \sin\theta e^{i\Theta} & -\cos\theta
+                    \end{pmatrix}
+                    \]</div>
+                    <p>
+                        where \( \vec{h} = (h_x, h_y, h_z) \) are real parameters. In this case, eigen energies will be \( E_{\pm} = \pm h \) and eigenvectors of any similar matrix can be written as
+                    </p>
+                    <div class="math">\[
+                    \begin{aligned}
+                    \ket{E_+} &= \cos{\frac{\theta}{2}} \ket{e} + \sin{\frac{\theta}{2}} e^{i\Theta} \ket{g} \\
+                    \ket{E_-} &= - \sin{\frac{\theta}{2}} e^{i\Theta} \ket{e} + \cos{\frac{\theta}{2}} \ket{g}
+                    \end{aligned}
+                    \]</div>
+                    <p>
+                        As seen, we can write,
+                    </p>
+                    <div class="math">\[
+                    h\cos\theta = h_z, \quad h_{eg} = h\sin\theta e^{-i\Theta}
+                    \]</div>
+                    <div class="math">\[
+                    \cos\theta = \frac{h_z}{h}, \quad \sin\theta = \frac{|h_{eg}|}{h}, \quad e^{-i\Theta} = \frac{h_{eg}}{|h_{eg}|}
+                    \]</div>
+                </div>
+                <div class="section" id="qm-thermo">
+                    <h2 class="noindent">Thermodynamics of Quantum System</h2>
+                    <p>
+                        As we know that in density matrix formalism, the average value of any operator can be written as,
+                    </p>
+                    <div class="math">\[
+                    \langle \mathcal{O} \rangle = \mathrm{Tr}(\mathcal{O}\rho(t))
+                    \]</div>
+                    <p>
+                        Using this, we can define the average total energy of the system:
+                    </p>
+                    <div class="math">\[
+                    U = \mathrm{Tr}(H(t)\rho(t))
+                    \]</div>
+                    <p>
+                        To calculate \( U \), we use the trace taken over the eigenstates of the Hamiltonian. It will be the same if we do it in the density matrix eigenbasis. Then total energy can be written as,
+                    </p>
+                    <div class="math">
+                    \[
+                    U = \mathrm{Tr}(H(t)\rho(t)) = \sum_k \langle E_k | H(t)\rho(t) | E_k \rangle = \sum_{k,l} \langle E_k | H(t) | E_l \rangle \langle E_l | \rho(t) | E_k \rangle
+                    \]
+                    </div>
+                    <p>
+                        As the Hamiltonian is diagonalized in the eigenbasis, we get,
+                    </p>
+                    <div class="math">\[
+                    U = \sum_{k} \langle E_k | H(t) | E_k \rangle \langle E_k | \rho(t) | E_k \rangle = h\langle E_+ | \rho(t) | E_+ \rangle - h\langle E_- | \rho(t) | E_- \rangle
+                    \]</div>
+                    <p>
+                        So we have to calculate two terms, \( \langle E_+ | \rho(t) | E_+ \rangle \) and \( \langle E_- | \rho(t) | E_- \rangle \). For the first term,
+                    </p>
+                    <div class="math">\[
+                    \begin{aligned}
+                    \langle E_+ | \rho(t) | E_+ \rangle &= 
+                    \begin{pmatrix}
+                    \cos\frac{\theta}{2} & \sin\frac{\theta}{2}e^{-i\Theta}
+                    \end{pmatrix}
+                    \begin{pmatrix}
+                    \rho_{ee} & \rho_{eg}\\
+                    \rho_{ge} & \rho_{gg}
+                    \end{pmatrix}
+                    \begin{pmatrix}
+                    \cos\frac{\theta}{2}\\
+                    \sin\frac{\theta}{2}e^{i\Theta}
+                    \end{pmatrix}\\
+                    &= \cos^2{\frac{\theta}{2}} \rho_{ee} + \cos\frac{\theta}{2}\sin\frac{\theta}{2}e^{i\Theta}\rho_{eg} + \cos\frac{\theta}{2}\sin\frac{\theta}{2}e^{-i\Theta}\rho_{ge} + \sin^2{\frac{\theta}{2}} \rho_{gg}
+                    \end{aligned}
+                    \]</div>
+                    <p>
+                        Similarly, for the second term,
+                    </p>
+                    <div class="math">\[
+                    \langle E_- | \rho(t) | E_- \rangle = \sin^2{\frac{\theta}{2}} \rho_{ee} - \cos\frac{\theta}{2}\sin\frac{\theta}{2}e^{i\Theta}\rho_{eg} - \cos\frac{\theta}{2}\sin\frac{\theta}{2}e^{-i\Theta}\rho_{ge} +  \cos^2{\frac{\theta}{2}} \rho_{gg}
+                    \]</div>
+                    <p>
+                        Substituting back, we get
+                    </p>
+                    <div class="math">\[
+                    \begin{aligned}
+                    U &= h\Big[\cos^2{\frac{\theta}{2}} \rho_{ee} + \cos\frac{\theta}{2}\sin\frac{\theta}{2}e^{i\Theta}\rho_{eg} + \cos\frac{\theta}{2}\sin\frac{\theta}{2}e^{-i\Theta}\rho_{ge} \\
+                    &\quad + \sin^2{\frac{\theta}{2}} \rho_{gg} - \sin^2{\frac{\theta}{2}} \rho_{ee} + \cos\frac{\theta}{2}\sin\frac{\theta}{2}e^{i\Theta}\rho_{eg} \\
+                    &\quad + \cos\frac{\theta}{2}\sin\frac{\theta}{2}e^{-i\Theta}\rho_{ge} -  \cos^2{\frac{\theta}{2}} \rho_{gg}\Big] \\
+                    &= h\Big[\cos\theta (\rho_{ee} - \rho_{gg}) + \sin\theta (e^{i\Theta}\rho_{eg} + e^{-i\Theta}\rho_{ge})\Big]
+                    \end{aligned}\]
+                    </div>
+                    <p>
+                        where \( \cos\alpha = \cos\phi \cos\theta + \sin\theta \sin\phi \cos(\Theta - \Phi) \). Internal energy variation can be defined as the time derivative of the energy function above. But decomposition of internal energy variation in work and heat according to the first law of thermodynamics can be seen from many different points of view as various definitions have been put forward at different points of time. Here we focus only on the Conventional Approach.
+                    </p>
+                    <div class="subsection", id = 'qm-thermo-alicki'>
+                        <h3>The Conventional Approach</h3>
+                        <p>
+                            In the approach introduced by R. Alicki, it is assumed that a change in the local Hamiltonian of a system is necessarily associated with work and any change in the state of a system is necessarily associated with heat. Due to this association, only the contribution of the external field is considered in the definition of work. From the equation, we can write:
+                        </p>
+                        <div class="math">\[
+                        \frac{dU}{dt} = \frac{d}{dt} \mathrm{Tr}(H(t)\rho(t)) = \mathrm{Tr}[\dot{H}(t)\rho(t)] + \mathrm{Tr}[H(t)\dot{\rho}(t)]
+                        \]</div>
+                        <p>
+                            Let's see the Lindblad form of the Quantum Master equation (to be proved later):
+                        </p>
+                        <div class="math">\[
+                        \dot{\rho}(t) = \frac{1}{i} [H(t), \rho(t)] + \mathcal{L}\rho(t)
+                        \]</div>
+                        <p>
+                            An explicit form of \( \mathcal{L}\rho(t) \) includes the effect of the environment via correlation functions. This part is called dissipation due to its interaction with the environment.
+                        </p>
+                        <div class="math">\[
+                        \frac{dU}{dt} = \mathrm{Tr}[\dot{H}(t)\rho(t)] + \mathrm{Tr}[H(t)\frac{1}{i} [H(t), \rho(t)] + H(t)\mathcal{L}\rho(t)]
+                        \]</div>
+                        <p>
+                            The term \( \mathrm{Tr}[H(t)\frac{1}{i} [H(t), \rho(t)]] \) is zero due to the cyclic property of the trace, so we get:
+                        </p>
+                        <div class="math">\[
+                        \frac{dU}{dt} = \mathrm{Tr}[\dot{H}(t)\rho(t)] + \mathrm{Tr}[H(t)\mathcal{L}\rho(t)]
+                        \]</div>
+                        <p>
+                            If we define dissipation of energy as heat flow, due to the first law of thermodynamics, we can define the work flow and heat flow in the quantum region as:
+                        </p>
+                        <div class="math">\[
+                        \dot{Q}(t) = \mathrm{Tr}[H(t)\mathcal{L}\rho(t)] = \mathrm{Tr}[H(t)\dot{\rho}(t)]
+                        \]</div>
+                        <div class="math">\[
+                        \dot{W}(t) = \mathrm{Tr}[\dot{H}(t)\rho(t)]
+                        \]</div>
+                        <p>
+                            So, change of energy due to time dependence of the Hamiltonian is defined as work flow. The Hamiltonian we have used till now is the general Hamiltonian of a driven system. For the purpose of deriving the master equation, we define the system Hamiltonian as \( H_S \). So in the next parts, the system Hamiltonian used till now (\( H \)) will be replaced by \( H_S \).
+                        </p>
+                    </div>
+                </div>
+                <div class="section" id="qm-master-eq">
+                    <h2 class="noindent">Master Equation</h2>
+                    <div class="subsection" id="qm-master-eq-derivation">     
+                    <h3>Born, Markovian, RWA Approximation</h3>
+                    <p>
+                        A Total system Hilbert space, given by <span class="math">&Hscr;</span> is a composite system of a subsystem Hilbert Space <span class="math">&Hscr;<sub>S</sub></span> and an Environment Hilbert Space <span class="math">&Hscr;<sub>R</sub></span>. We are taking the total hamiltonian <span class="math">H</span> of the composite system of a subsystem - S and the environment - R. We are considering the total system to be a closed or isolated system. Hamiltonian of the total system is given in the schrödinger picture <a href="#ref-lidar2019lecture" target="_self">[1]</a><a href="https://arxiv.org/abs/1902.00967" target="_blank" style="margin-left:2px;">&#128279;</a>, <a href="#ref-lidar2001completely" target="_self">[2]</a>.
+                    </p>
+                    <div class="math" style="text-align:center;">
+                        H = H_S + H_R + V(t)
+                    </div>
+                    <p>
+                        The Von Neumann equation of motion gives the time evolution of the density matrix of the total system,
+
+                    </p>
+                    <div class="math" style="text-align:center;">
+                        \(\dot{\rho}(t) = \frac{1}{i\hslash} [H, \rho(t)]\)
+                    </div>
+                    <p>
+                        We want to consider only the interaction between the system and the environment because, without interaction, the Hamiltonian system and environment only evolve with time according to their free unitary evolution. It will be very great if we go to the interaction picture. Then we can ignore the evolution of the density matrix due to the free hamiltonian. if \(V(t)\) is a very weak interaction hamiltonian, then \(\rho(t)\) will be slowly varying in the interaction picture,
+                    </p>
+                    <div class="math" style="text-align:center;">
+                        \(\rho_I(t) = e^{i\frac{H_S + H_R}{\hslash}t} \rho(t) e^{-i\frac{H_S + H_R}{\hslash}t}\)
+                    </div>
+                    <p>Then,</p>
+                    <div class="math" style="text-align:center;">
+                        \(\rho(t) = e^{-i\frac{H_S + H_R}{\hslash}t} \rho_I(t) e^{i\frac{H_S + H_R}{\hslash}t}\)
+                    </div>
+                    <p>
+                        substituting in the Schr&#246;dinger equation,
+                    </p>
+                    <div class="math" style="text-align:center;">
+                        \(\dot{\rho}_I(t) = \frac{1}{i\hslash} [V_I(t), \rho_I(t)]\)
+                    </div>
+                    <p>
+                        where,
+                    </p>
+                    <div class="math" style="text-align:center;">
+                        \(V_I(t) = e^{i\left(\frac{H_S + H_R}{\hslash}\right)t} V(t) e^{-i\left(\frac{H_S + H_R}{\hslash}\right)t}\)
+                    </div>
+                    <p>
+                        All the derivation of the Lindblad Master equation will depend on the consideration of two different time scales. One of them, The time scale \(T_A\) over which the system changes due to interaction hamiltonian. Please note this is not the free evolution time of the system; It changes only due to the interaction with the environment. \(T_A\) may be called the systems relaxation time. We may define this time scale roughly,
+                    </p>
+                    <div class="math" style="text-align:center;">
+                        \(\frac{d\rho_S(t)}{dt} \approx \frac{\rho_{SI}(t)}{T_A}\)
+                    </div>
+                    <p>
+                        Another one, over which time \(\tau_c\) internal correlation exist in the reservoir. Here we will only say that \(\tau_c\) is such a time that when it elapses, the state of the reservoir is practically independent of its initial state. Now we assume that introduced time scale satisfy \(\tau_c \ll t-t' \ll  T_A \).
+                    </p>
+                    <p>
+                        If we consider the weak interaction between the system and the environment, then we can use the perturbation theory to calculate the evolution of the total density matrix. Integrating the equation above from \(t' = 0\) to time \(t'\).
+                    </p>
+                    <div class="math" style="text-align:center;">
+                        \(\rho_I(t) = \rho_I(0) + \int_0^t dt'\frac{1}{i\hslash}[V_I(t'), \rho_I(t')]\)
+                    </div>
+                    <p>
+                        Inserting above in the previous equation, we get,
+                    </p>
+                    <div class="math" style="text-align:center;">
+                        \(\dot{\rho}_I(t) = \frac{1}{i\hslash}[V_I(t),\rho_I(0)] - \frac{1}{\hslash^2} \int_0^t dt' [V_I(t),[V_I(t'),\rho_I(t')]]\)
+                    </div>
+                    <p>
+                        We only consider till the second order in the strength of the interaction hamiltonian. It will be proven that third term will be very less than the second order. We are only interested in the system's evolution, so we take trace over the reservior's degrees of freedom. So equation for the systems evolution is given by,
+                    </p>
+                    <div class="math" style="text-align:center;">
+                        \(\dot{\rho}_{SI}(t) = \frac{1}{i\hslash} \mathrm{Tr}_R [V_I(t),\rho_I(0)] - \frac{1}{\hslash^2} \int_0^t dt' \mathrm{Tr}_R [V_I(t),[V_I(t'),\rho_I(t')]]\)
+                    </div>
+                    <p>
+                        We consider the environment as a reservoir, and it has many degrees of freedom. Even if the environment fluctuates, it gets back to a stationary state in a very short time. At any instant of our interest, We can say that environment is in the initial or stationary state. So the reduced density matrix of the reservoir can be written at any time as
+                    </p>
+                    <div class="math" style="text-align:center;">
+                        \(\rho_R(0)= \rho_R(t) =  \sum_R P_R\ket{R}\bra{R}\)
+                    </div>
+                    <p>
+                        \(\ket{R}\) is the eigenstates of the reservoir. Also, the hamiltonian can be written as
+                    </p>
+                    <div class="math" style="text-align:center;">
+                        \(H_R = \sum_R \epsilon_R \ket{R}\bra{R}\)
+                    </div>
+                    <p>
+                        So, reservior hamiltonian and reservior density matrix commute. so \([H_R,\rho_R(0)] = 0 \).
+                    </p>
+                    <p>
+                        Now, Consider form of the most general interaction hamiltonian like,
+                    </p>
+                    <div class="math" style="text-align:center;">
+                        \(V_I(t) = \sum_i S_i(t) \otimes R_i(t)\)
+                    </div>
+                    <p>
+                        where \(S_i(t)\) and \(R_i(t)\) need not the be hermitian indevidually, but \(V_I(t)\) need to be hermitian.  \(S_i(t)\) only oparates on system and \(R_i(t)\) only oparates on enviornment. Example of \(R_i(t)\) is electric field.
+                    </p>
+                    <div class="math" style="text-align:center;">
+                        <div>
+                        \(S_i(t) = e^{i\left(\frac{H_S }{\hslash}\right)t} S_i e^{-i\left(\frac{H_S }{\hslash}\right)t}\) <br>
+                        \(R_i(t) = e^{i\left(\frac{H_R}{\hslash}\right)t} R_i e^{-i\left(\frac{H_R}{\hslash}\right)t}\)
+                        </div>
+                    </div>
+                    <p>
+                        where \(V_I(t)\) is the interaction hamiltonian in the interaction picture. \(S_i\) and \(R_i\) are the Schrödinger picture interaction hamiltonian. Interaction hamiltonian needs to be hermitian so
+                    </p>
+                    <div class="math" style="text-align:center;">
+                        \(V^{\dagger}_I(t) = V_I(t) = (\sum_i S_i(t) \otimes R_i(t))^{\dagger} = \sum_i S^{\dagger}_i(t) \otimes R^{\dagger}_i(t)\)
+                    </div>
+                    <p>
+                        Assuming initially <span class="math">\(\rho(0) = \rho_S(0) \otimes \rho_R(0)\)</span>, the first term vanishes if <span class="math">\(\langle R_i(t) \rangle = 0\)</span> (otherwise, redefine <span class="math">V(t)</span> and <span class="math">H_A</span> accordingly).
+                    </p>
+                    <div class="math">
+                        <span class="math">\(\dot{\rho}_{SI}(t) = - \frac{1}{\hbar^2} \int_0^t dt' \mathrm{Tr}_R [V_I(t),[V_I(t'),\rho_{SI}(t')]]\)</span>
+                    </div>
+                    <p>
+                        After interaction, the total density matrix can be written as:
+                    </p>
+                    <div class="math">
+                        <span class="math">\(\rho_I(t) = \rho_{SI}(t) \otimes \rho_R(0) + \rho_{corr}(t)\)</span>
+                    </div>
+                    <p>
+                        Under the time scale assumption, <span class="math">\(\rho_{corr}(t)\)</span> can be neglected:
+                    </p>
+                    <div class="math">
+                        <span class="math">\(\dot{\rho}_{SI}(t) = - \frac{1}{\hbar^2} \int_0^t d\tau \mathrm{Tr}_R [V_I(t),[V_I(t-\tau),\rho_{SI}(t-\tau) \otimes \rho_R(0)]]\)</span>
+                    </div>
+                    <p>
+                        Change variables to <span class="math">\(\tau = t - t'\)</span>:
+                    </p>
+                    <div class="math">
+                        <span class="math">\(\dot{\rho}_{SI}(t) = - \frac{1}{\hbar^2} \int_0^t d\tau \mathrm{Tr}_R [V_I(t),[V_I(t-\tau),\rho_{SI}(t) \otimes \rho_R(0)]]\)</span>
+                    </div>
+                    <p>
+                        The Markov approximation allows <span class="math">\(\rho_{SI}(t-\tau) \approx \rho_{SI}(t)\)</span>:
+                    </p>
+                    <div class="math">
+                        <span class="math">\(\dot{\rho}_{SI}(t) = - \frac{1}{\hbar^2} \int_0^t d\tau \mathrm{Tr}_R [V_I(t),[V_I(t-\tau),\rho_{SI}(t) \otimes \rho_R(0)]]\)</span>
+                    </div>
+                    <p>
+                        For <span class="math">\(\tau_c \ll \tau\)</span>, extend the upper limit to infinity:
+                    </p>
+                    <div class="math">
+                        <span class="math">\(\dot{\rho}_{SI}(t) = - \frac{1}{\hbar^2} \int_0^{\infty} d\tau \mathrm{Tr}_R [V_I(t),[V_I(t-\tau),\rho_{SI}(t) \otimes \rho_R(0)]]\)</span>
+                    </div>
+                    <p>
+                        Expanding the commutators and grouping terms:
+                    </p>
+                    <div class="math" style="font-size:0.95em;">
+                        <span class="math">
+                            <b>First term:</b> <br>
+                            <span style="margin-left:1em;">\(\mathrm{Tr}_R [R_i^\dagger(t) R_j(t-\tau) \rho_R(0)] \{ S_i^\dagger(t) S_j(t-\tau) \rho_{SI}(t) - S_j(t-\tau) \rho_{SI}(t) S_i^\dagger(t) \}\)</span><br>
+                            <b>Second term:</b> <br>
+                            <span style="margin-left:1em;">\(\mathrm{Tr}_R [R_i(t) \rho_R(0) R_j^\dagger(t-\tau)] \{ S_i(t) \rho_{SI}(t) S_j^\dagger(t-\tau) - \rho_{SI}(t) S_j^\dagger(t-\tau) S_i(t) \}\)</span>
+                        </span>
+                    </div>
+                    <p>
+                        The evolution of the reduced density matrix depends on the environment through the time correlation function:
+                    </p>
+                    <div class="math">
+                        <span class="math">\(\langle R_i^\dagger(t) R_j(t-\tau) \rangle = \mathrm{Tr}[R_i^\dagger(t) R_j(t-\tau) \rho_R(0)]\)</span>
+                    </div>
+                    <p>
+                        Transforming operators using the spectral decomposition of the system Hamiltonian, we write:
+                    </p>
+                    <div class="math">
+                        <span class="math">\(S_i(t) = \sum_{a,b} e^{-i\omega t} S_i(\omega)\)</span>, where <span class="math">\(\omega = (\epsilon_b - \epsilon_a)/\hbar\)</span> and <span class="math">\(S_i(\omega) = |a\rangle\langle a| S_i |b\rangle\langle b|\)</span>.
+                    </div>
+                    <p>
+                        Applying the rotating wave approximation (RWA), only terms with <span class="math">\(\omega = \omega'\)</span> contribute:
+                    </p>
+                    <div class="math">
+                        <span class="math">\(\dot{\rho}_{SI}(t) = \sum_{i,j} \sum_{\omega} \int_0^\infty d\tau e^{i\omega\tau} \langle R_i^\dagger(t) R_j(t-\tau) \rangle [S_j(\omega)\rho_{SI}(t), S_i^\dagger(\omega)] - \text{h.c.}\)</span>
+                    </div>
+                    <p>
+                        Defining jump (Lindblad) operators <span class="math">L_{ab} = |a\rangle\langle b|</span> and decay rates <span class="math">\(\gamma_{ab}\)</span>, the master equation takes the Lindblad form:
+                    </p>
+                    <div class="math">
+                        <span class="math">\(\dot{\rho}_S(t) = \frac{1}{i\hbar}[H_S + H_{LS}, \rho_S(t)] + \sum_{a,b} \gamma_{ab} \left( L_{ab} \rho_S(t) L_{ab}^\dagger - \frac{1}{2} \{ L_{ab}^\dagger L_{ab}, \rho_S(t) \} \right)\)</span>
+                    </div>
+                    <p>
+                        Here, <span class="math">H_{LS}</span> is the Lamb shift Hamiltonian, and <span class="math">\(\gamma_{ab}\)</span> are the decay rates including all collective effects due to the environment. The Lindbladian superoperator is:
+                    </p>
+                    <div class="math">
+                        <span class="math">\(\mathcal{L}[\rho_S(t)] = \sum_{\mu} \gamma_{\mu} \left( L_{\mu} \rho_S(t) L_{\mu}^\dagger - \frac{1}{2} \{ L_{\mu}^\dagger L_{\mu}, \rho_S(t) \} \right)\)</span>
+                    </div>
+                    <p>
+                        The final master equation is:
+                    </p>
+                    <div class="math">
+                        <span class="math">\(\dot{\rho}_S(t) = \frac{1}{i\hbar}[H_S + H_{LS}, \rho_S(t)] + \mathcal{L}[\rho_S(t)]\)</span>
+                    </div>
+                    <p>
+                        This equation applies to many-body systems interacting with an environment, describing transitions between eigenstates of the total Hamiltonian.
+                    </p>
+                </div>
+                <div class="section" id="qm-application">
+                    <h2 class="noindent">Application to Quantum Master Equation</h2>
+                    <div class="subsection" id="qm-application-simple">
+                    <h3>A simple application</h3>
+                    <p>
+                        We are going to apply a single quantum jump to the master equation given by
+                    </p>
+                    <div class="math">
+                        \[
+                        \dot{\rho}_S(t)  = \frac{1}{i \hslash} [H_S(t), \rho_S(t)] + \mathcal{L}[\rho_S(t)]
+                        \]
+                    </div>
+                    <p>
+                        Where,
+                    </p>
+                    <div class="math">
+                        \[
+                        \mathcal{L}[\rho_S(t)] = \sum_{\mu = 1}^{\mathcal{N}} D[L_{\mu}]\rho_S(t)
+                        \]
+                    </div>
+                    <p>
+                        using the notation,
+                    </p>
+                    <div class="math">
+                        \[
+                        D[X] = X \rho X^{\dagger} - \frac{1}{2} (X^{\dagger}X \rho + \rho X^{\dagger}X)
+                        \]
+                    </div>
+                    <p>
+                        Where \( \{\mathcal{L}_{\mu}\}_{\mu = 1}^{\mathcal{N}} \), called Jump Operators.
+                    </p>
+                    <p>
+                        We are applying non-driven Qubit in contact with a reservoir at zero temperature, with \( L = \sqrt{\gamma} \sigma_- \), where \( \sigma_- = \ket{g}\bra{e} \), with hamiltonian of the qubit, \( H_S = \hslash \omega_0 \ket{e}\bra{e} \), where, excited state \( =\ket{e} \), ground state \( =\ket{g} \).
+                    </p>
+                    <p>
+                        As it is a single jump operator, master equation becomes,
+                    </p>
+                    <div class="math">
+                        \[
+                        \dot{\rho}_S(t) = \frac{1}{i \hslash} [\hslash \omega_0 \ket{e}\bra{e}, \rho_S(t)] + D[\sqrt{\gamma} \sigma_-]\rho_S(t)
+                        \]
+                    </div>
+                    <div class="math">
+                        \[
+                        \dot{\rho}_S(t) = \frac{1}{i \hslash} [\hslash \omega_0 \ket{e}\bra{e}, \rho_S(t)] + \gamma[\sigma_-\rho\sigma_+ - \frac{1}{2}\rho \sigma_+ \sigma_- - \frac{1}{2}\sigma_+\sigma_-\rho]
+                        \]
+                    </div>
+                    <p>
+                        Now, we are taking the element of ground state probability,
+                    </p>
+                    <div class="math">
+                        \[
+                        \begin{split}
+                        \dot{P}_{ee}(t) = \ \bra{e}\dot{\rho}_S(t)\ket{e} =  \frac{1}{i \hslash} \bra{e}[\hslash \omega_0 \ket{e}\bra{e}, \rho_S(t)]\ket{e} + \\ \gamma\bra{e}\sigma_-\rho\sigma_+ \ket{e} - \gamma\frac{1}{2}\bra{e}\rho \sigma_+ \sigma_-\ket{e} - \gamma\frac{1}{2}\bra{e}\sigma_+\sigma_-\rho\ket{e}
+                        \end{split}
+                        \]
+                    </div>
+                    <p>
+                        Substituting everything,
+                    </p>
+                    <div class="math">
+                        \[
+                        \begin{split}
+                        \dot{P}_{ee}(t) =  \frac{1}{i \hslash}[\hslash \omega_0 \braket{e|e} \bra{e}\rho_S(t)\ket{e} - \\ \hslash \omega_0 \bra{e}\rho_S(t)\ket{e} \braket{e|e}] +  \gamma\braket{e|g}\bra{e}\rho_S(t)\ket{e}\braket{g|e} - \\ \gamma\frac{1}{2}\bra{e}\rho_S(t) \ket{e}\braket{g|g}\braket{e|e} - \gamma\frac{1}{2}\braket{e|e}\braket{g|g}\bra{e}\rho_S(t)\ket{e}
+                        \end{split}
+                        \]
+                    </div>
+                    <p>
+                        Now we know that \( \braket{e|e} = \braket{g|g} = 1, \braket{g|e} = \braket{e|g} = 0 \), then we get the equation,
+                    </p>
+                    <div class="math">
+                        \[
+                        \begin{split}
+                        \dot{P}_{ee}(t) =  \frac{1}{i \hslash}[\hslash \omega_0\bra{e}\rho_S(t)\ket{e} - \hslash \omega_0 \bra{e}\rho_S(t)\ket{e}] - \gamma\frac{1}{2}\bra{e}\rho_S(t)\ket{e} - \gamma\frac{1}{2}\bra{e}\rho_S(t)\ket{e}
+                        \end{split}
+                        \]
+                    </div>
+                    <p>
+                        So the commutation relation gets to be zero, and equation becomes,
+                    </p>
+                    <div class="math">
+                        \[
+                        \begin{split}
+                        \dot{P}_{ee}(t) = - \gamma\bra{e}\rho_S(t) \ket{e} = -\gamma P_{ee}(t)
+                        \end{split}
+                        \]
+                    </div>
+                    <p>
+                        Solving the equation of motion for the initial condition of \( P_{ee}(0) = 1 \), which means that initially the qubit was in the excited state, \( \ket{e} \).
+                    </p>
+                    <div class="math">
+                        \[
+                        \begin{split}
+                        P_{ee}(t) = P_{ee}(0) e^{-\gamma t} = e^{-\gamma t}
+                        \end{split}
+                        \]
+                    </div>
+                    <p>
+                        To plot the probability we have used the variable \( x = \gamma t \), the python code given by,
+                    </p>
+                    <pre>
+<code>
+import numpy as np
+from matplotlib import pyplot as plt
+x=np.linspace(0,5,1000)
+y=np.exp(-x)
+plt.plot(x,y)
+plt.xlabel('x')
+plt.ylabel('Probability')
+plt.grid()
+plt.title('Probability of the Qubit to be in the ground state')
+plt.legend(['Pee'])
+plt.show()
+</code>
+    </pre>
+    <figure>
+        <img src="images/Resources_Images/output_1_0.png" alt="Probability of the Qubit to be in the ground state" >
+        <figcaption>Probability of the Qubit to be in the ground state</figcaption>
+    </figure>
+    <div class = 'subsection' id = 'qm-application-driven'></div>
+    <h3>A driven open Two level system and its Thermodynamics</h3>
+    <p>
+        To consider the thermodynamic quantities of a system, we are going to consider a two-level atom periodically driven by a classical laser and interacting with both a photon bath and a dephasing bath. We also consider that these two baths are completely independent of each other, which means there is no correlation between the two types of baths. We will be solving this specific problem using the Quantum Master equation.
+    </p>
+
+    <h4>Hamiltonian of a driven Two level system</h4>
+       <p>
+        A two-level atom interacts with classical fields via atomic dipole moment. Dipole moment of a system is generally given by \( \mu = \sum_i e \vec{r}_i \) which is an odd function. The dipole moment of a quantum two-level system can be written as
+    </p>
+    <div class="math">
+        \[
+        \hat{\mu} = \begin{pmatrix}
+        \mu_{ee} & \mu_{eg} \\
+        \mu_{ge} & \mu_{gg}
+        \end{pmatrix}
+        \]
+    </div>
+    <p>
+        As \( \hat{\mu}_{ee} =  \bra{e} \mu \ket{e} \) is odd as \( \mu \) is an odd function, \( \mu_{ee} = \mu_{gg} =0 \) means diagonal terms are zero. Also dipole moment is real quantity and it's an observable, leads to the conclusion \( \mu_{eg} = \mu_{ge} \).
+    </p>
+    <div class="math">
+        \[
+        \hat{\mu} = \begin{pmatrix}
+        0 & \mu_{eg} \\
+        \mu_{ge} & 0
+        \end{pmatrix}
+        = \bra{e}\mu\ket{g} \ket{e}\bra{g} + \bra{g}\mu\ket{e}  \ket{g}\bra{e}
+        = \bra{e}\mu\ket{g}[\sigma_+ + \sigma_-]
+        = \mu_{eg}[\sigma_+ + \sigma_-]
+        \]
+    </div>
+    <p>
+        Then interaction Hamiltonian with the classical laser field can be written in the dipole approximation limit,
+    </p>
+    <div class="math">
+        \[
+        H_{int} = \vec{\mu}\cdot \vec{E}\\
+        = \mu_{eg}[\sigma_+ + \sigma_-] E_0 \cos{\Omega t}
+        \]
+    </div>
+    <p>
+        Replacing in the equation and after simplification we get,
+    </p>
+    <div class="math">
+        \[
+        \bar{H} = \frac{\delta}{2} \sigma_z + \epsilon  \sigma_x
+        \]
+    </div>
+    <p>
+        Average Hamiltonian is diagonalized as,
+    </p>
+    <div class="math">
+        \[
+        \bar{H} -\lambda I = 0 \\
+        \begin{pmatrix}
+        \frac{\delta}{2} - \lambda & \epsilon \\
+        \epsilon & -\frac{\delta}{2} - \lambda
+        \end{pmatrix} = 0 \\
+        \lambda = \frac{1}{2} \sqrt{4\epsilon^2 + \delta^2} = \pm \frac{\Omega_r}{2}
+        \]
+    </div>
+    <p>
+        In the average Hamiltonian, \( H_{eg} = \epsilon \), is real quantity. So \( H_{eg} = |H_{eg}|e^{-i\Theta} \) which makes for this particular case \( \Theta = 0 \) and eigen basis of the diagonal Hamiltonian,
+    </p>
+    <div class="math">
+        \[
+        \begin{aligned}
+        \ket{E_+} &= \cos{\frac{\theta}{2}} \ket{e} + \sin{\frac{\theta}{2}} e^{i\Theta} \ket{g} \\
+        \ket{E_-} &= - \sin{\frac{\theta}{2}} e^{i\Theta} \ket{e} + \cos{\frac{\theta}{2}} \ket{g}
+        \end{aligned}
+        \]</div>
+    <p>
+        As seen, we can write,
+    </p>
+    <div class="math">\[
+    h\cos\theta = h_z, \quad h_{eg} = h\sin\theta e^{-i\Theta}
+    \]</div>
+    <div class="math">\[
+    \cos\theta = \frac{h_z}{h}, \quad \sin\theta = \frac{|h_{eg}|}{h}, \quad e^{-i\Theta} = \frac{h_{eg}}{|h_{eg}|}
+    </div>
+    <p>
+        The system operators involved in coupling in the interaction picture evolve as:
+    </p>
+    <div class="math">
+        \[
+        \sigma_j(t) = U^{\dagger}_S(t) \sigma_j U_S(t)
+        \]
+    </div>
+    <p>
+        For example, for <span class="math">\(\sigma_z\)</span>:
+    </p>
+    <div class="math">
+        \[
+        \sigma_z(t) = U^{\dagger}_S(t) \sigma_z U_S(t) = e^{i\bar{H}t}P^{\dagger}_t \sigma_z P_t e^{-i\bar{H}t}
+        \]
+    </div>
+    <p>
+        Since <span class="math">\(P^{\dagger}_t \sigma_z P_t = \sigma_z\)</span> (by the BCH formula and commutation relations), we have:
+    </p>
+    <div class="math">
+        \[
+        \sigma_z(t) = e^{i\frac{\Omega_r}{2}\bar{\sigma}_0 t} \sigma_z e^{-i\frac{\Omega_r}{2}\bar{\sigma}_0 t}
+        \]
+    </div>
+    <p>
+        Expanding using commutators:
+    </p>
+    <div class="math">
+        \[
+        \sigma_z(t) = \sigma_z + i\frac{\Omega_r}{2}t[\bar{\sigma}_0,\sigma_z] + \frac{1}{2!}\left(\frac{i\Omega_r t}{2}\right)^2 [\bar{\sigma}_0,[\bar{\sigma}_0,\sigma_z]] + \ldots
+        \]
+    </div>
+    <p>
+        The commutator evaluates to:
+    </p>
+    <div class="math">
+        \[
+        [\bar{\sigma}_0,\sigma_z] = \frac{4\epsilon}{\Omega_r}(\bar{\sigma}_- - \bar{\sigma}_+)
+        \]
+    </div>
+    <p>
+        Substituting and simplifying, we get:
+    </p>
+    <div class="math">
+        \[
+        \sigma_z(t) = \cos{\theta} \bar{\sigma}_0 - \sin{\theta}(\bar{\sigma}_+ e^{i\Omega_r t} - \bar{\sigma}_- e^{-i\Omega_r t})
+        \]
+    </div>
+    <p>
+        Similarly, for <span class="math">\(\sigma_x(t)\)</span>:
+    </p>
+    <div class="math">
+        \[
+        \begin{aligned}
+        \sigma_x(t) = &\ e^{i\Omega t} \sin{\frac{\theta}{2}} \bar{\sigma}_0 + e^{-i\Omega t} \sin{\frac{\theta}{2}} \bar{\sigma}_0 \\
+        &+ \frac{\cos{\theta} + 1}{2} e^{i(\Omega_r + \Omega)t}\bar{\sigma}_+ + \frac{\cos{\theta} + 1}{2} e^{-i(\Omega_r + \Omega)t}\bar{\sigma}_- \\
+        &+ \frac{\cos{\theta} - 1}{2} e^{-i(\Omega_r - \Omega)t}\bar{\sigma}_- + \frac{\cos{\theta} - 1}{2} e^{i(\Omega_r - \Omega)t}\bar{\sigma}_+
+        \end{aligned}
+        \]
+    </div>
+    <p>
+        To compactify the notation, the system operators in the interaction picture can be written as:
+    </p>
+    <div class="math">
+        \[
+        \sigma_j(t) = \sum_{q,p \in (+,0,-)} e^{i(q\Omega_r + p\Omega)t} S^{j}_{q,p} \bar{\sigma}_q
+        \]
+    </div>
+    <p>
+        For <span class="math">\(\sigma_z(t)\)</span>:
+    </p>
+    <div class="math">
+        \[
+        S^z_{0,0} = \cos{\theta}, \quad S^z_{\pm,0} = -\sin{\theta}
+        \]
+    </div>
+    <p>
+        For <span class="math">\(\sigma_x(t)\)</span>:
+    </p>
+    <div class="math">
+        \[
+        S^x_{0,\pm} = \sin{\frac{\theta}{2}}, \quad S^x_{\pm,\pm} = \frac{\cos{\theta}+1}{2}, \quad S^x_{\pm,\mp} = \frac{\cos{\theta}-1}{2}
+        \]
+    </div>
+    <p>
+        where <span class="math">\(\bar{\sigma}_0, \bar{\sigma}_+, \bar{\sigma}_-\)</span> are the Pauli matrices in the Floquet basis.
+    </p>
+
+    <h5>Solution of the Dynamics</h5>
+    <p>
+        The master equation in the interaction picture for the density matrix in the Floquet basis is:
+    </p>
+    <div class="math">
+        \[
+        \frac{d\rho_I(t)}{dt} = \sum i \sum_q \gamma^i_q \left( \bar{\sigma}_q \rho_I(t) \bar{\sigma}^{\dagger}_q - \frac{1}{2}\{\bar{\sigma}^{\dagger}_q \bar{\sigma}_q, \rho_I(t) \} \right)
+        = \mathcal{L}_z \rho_I(t) + \mathcal{L}_x \rho_I(t)
+        \]
+    </div>
+    <div class="math">
+        \[
+        \boxed{\frac{d\rho_I(t)}{dt} =\sum_i \mathcal{L}_i \rho_I(t)}
+        \]
+    </div>
+    <p>
+        Thus, Lindblad operators correspond to the Pauli matrices in the Floquet basis. With the following definitions:
+    </p>
+    <ul>
+        <li>
+            <b>Correlation function:</b>
+            <span class="math">
+                \( G_j(q\Omega_r + p\Omega) = \int_{-\infty}^{\infty} e^{-i(q\Omega_r + p\Omega)\tau} \mathrm{Tr}[R^{\dagger}_i(t) R_j(t-\tau) \rho_R(0)] d\tau \)
+            </span>
+        </li>
+        <li>
+            <b>Relaxation rates:</b>
+            <span class="math">
+                \( \gamma^i_q = \sum_p \lambda^2_i (S^i_{q,p})^2 G_i(q\Omega_r + p\Omega) \)
+            </span>
+        </li>
+    </ul>
+    <p>
+        Specifically, the relaxation rates for the diagonal coupling involve dephasing only:
+    </p>
+    <div class="math">
+        \[
+        \gamma^z_0 =  \lambda^2_z (S^z_{0,0})^2 G_z(0) + \lambda^2_z (S^z_{0,+})^2 G_z(\Omega) + \lambda^2_z (S^z_{0,-})^2 G_z(-\Omega)
+        = \lambda^2_z (S^z_{0,0})^2 G_z(0) = 0
+        \]
+    </div>
+    <p>
+        which is zero as it will be an odd integration over time. From similar calculation we get:
+    </p>
+    <ul>
+        <li><span class="math">\(\gamma^z_+ = \lambda^2_z \sin^{2}\theta G_z(\Omega_r)\)</span></li>
+        <li><span class="math">\(\gamma^z_- = \lambda^2_z \sin^{2}\theta G_z(-\Omega_r)\)</span></li>
+    </ul>
+    <p>
+        And the relaxation rates of the electromagnetic bath:
+    </p>
+    <ul>
+        <li><span class="math">\(\gamma^x_0 = \lambda^2_x \left(\frac{\sin\theta}{2}\right)^2 [G_x(\Omega) + G_x(-\Omega)]\)</span></li>
+        <li>
+            <span class="math">\(\gamma^x_+ = \lambda^2_x \left(\frac{\cos\theta + 1}{2}\right)^2 G_x(\Omega_+) + \lambda^2_x \left(\frac{\cos\theta - 1}{2}\right)^2 G_x( \Omega_- )\)</span>
+        </li>
+        <li>
+            <span class="math">\(\gamma^x_- =\lambda^2_x \left(\frac{\cos\theta + 1}{2}\right)^2 G_x(-\Omega_+) + \lambda^2_x \left(\frac{\cos\theta - 1}{2}\right)^2 G_x( -\Omega_- )\)</span>
+        </li>
+    </ul>
+    <p>
+        For short notation, we use <span class="math">\(\Omega_{\pm} = (\Omega \pm \Omega_r)\)</span>.
+    </p>
+
+    <h6>Solution of The Dynamics</h6>
+    <p>
+        The master equation is first solved in the interaction picture with the density matrix obtained in the Floquet basis. We then recast the density matrix in the Schrödinger picture and express it in the atom basis. Dismantling everything:
+    </p>
+    <div class="math">
+        \[
+        \begin{aligned}
+        \dot{\rho}_I(t) = &[\bar{\sigma}_0 \rho_I(t)\bar{\sigma}^{\dagger}_0 - \frac{1}{2}\{\bar{\sigma}^{\dagger}_0\bar{\sigma}_0, \rho_I(t)\}] (\gamma^z_0 + \gamma^x_0) \\
+        &+ [\bar{\sigma}_+ \rho_I(t)\bar{\sigma}^{\dagger}_+ - \frac{1}{2}\{\bar{\sigma}^{\dagger}_+\bar{\sigma}_+, \rho_I(t)\}] (\gamma^z_+ + \gamma^x_+) \\
+        &+ [\bar{\sigma}_- \rho_I(t)\bar{\sigma}^{\dagger}_- - \frac{1}{2}\{\bar{\sigma}^{\dagger}_-\bar{\sigma}_-, \rho_I(t)\}] (\gamma^z_- + \gamma^x_-)
+        \end{aligned}
+        \]
+    </div>
+    <p>
+        with <span class="math">\(\gamma^z_0 + \gamma^x_0 = \gamma_0\)</span>, <span class="math">\(\gamma^z_+ + \gamma^x_+ = \gamma_+\)</span>, <span class="math">\(\gamma^z_- + \gamma^x_- = \gamma_-\)</span>:
+    </p>
+    <div class="math">
+        \[
+        \begin{aligned}
+        \dot{\rho}_I(t) = &\gamma_0 [\bar{\sigma}_0 \rho_I(t)\bar{\sigma}_0 - \frac{1}{2}\{\bar{\sigma}_0\bar{\sigma}_0, \rho_I(t)\}] \\
+        &+ \gamma_+ [\bar{\sigma}_+ \rho_I(t)\bar{\sigma}_- - \frac{1}{2}\{\bar{\sigma}_-\bar{\sigma}_+, \rho_I(t)\}] \\
+        &+ \gamma_- [\bar{\sigma}_- \rho_I(t)\bar{\sigma}_+ - \frac{1}{2}\{\bar{\sigma}_+ \bar{\sigma}_-, \rho_I(t)\}] \\
+        &+ \gamma_0[\rho_{I_{\bar{e}\bar{e}}}(t) \ket{\bar{e}}\bra{\bar{e}}-\rho_{I_{\bar{e}\bar{g}}}(t) \ket{\bar{e}}\bra{\bar{g}} - \rho_{I_{\bar{g}\bar{e}}}(t) \ket{\bar{g}}\bra{\bar{e}} + \rho_{I_{\bar{g}\bar{g}}}(t) \ket{\bar{g}}\bra{\bar{g}}\\
+        &-\frac{1}{2}\left(\ket{\bar{e}}\bra{\bar{e}} \rho_I(t) + \rho_I(t)\ket{\bar{e}}\bra{\bar{e}} + \ket{\bar{g}}\bra{\bar{g}} \rho_I(t) + \rho_I(t)\ket{\bar{g}}\bra{\bar{g}}\right)]
+        \end{aligned}
+        \]
+    </div>
+    <p>
+        The density matrix elements in the interaction picture Floquet basis are:
+    </p>
+    <div class="math">
+        \[
+        \dot{\rho}_{I_{\bar{e}\bar{e}}}(t) = \gamma_+ \rho_{I_{\bar{g}\bar{g}}}(t)- \gamma_-\rho_{I_{\bar{e}\bar{e}}}(t)
+        \]
+    </div>
+    <div class="math">
+        \[
+        \boxed{\dot{\rho}_{I_{\bar{g}\bar{g}}}(t)  = \gamma_- \rho_{I_{\bar{e}\bar{e}}}(t)- \gamma_+\rho_{I_{\bar{g}\bar{g}}}(t)}
+        \]
+    </div>
+    <div class="math">
+        \[
+        \dot{\rho}_{I_{\bar{e}\bar{g}}}(t) = - \rho_{I_{\bar{e}\bar{g}}}(t) \left[2\gamma_0 + \frac{\gamma_+ + \gamma_-}{2}\right]
+        \]
+    </div>
+    <div class="math">
+        \[
+        \boxed{\dot{\rho}_{I_{\bar{g}\bar{e}}}(t) = - \rho_{I_{\bar{g}\bar{e}}}(t) \left[2\gamma_0 + \frac{\gamma_+ + \gamma_-}{2}\right]}
+        \]
+    </div>
+    <p>
+        As density matrix diagonal elements are the probabilities for the system to be in a state and its trace must be preserved, with the condition <span class="math">\(\rho_{I_{\bar{e}\bar{e}}}(t) + \rho_{I_{\bar{g}\bar{g}}}(t) = 1\)</span>. Introducing the two decay rates <span class="math">\(\Gamma_1 = \gamma_+ + \gamma_-\)</span> and <span class="math">\(\Gamma_2 = \frac{\Gamma_1}{2} + 2\gamma_0\)</span>, we get:
+    </p>
+    <div class="math">
+        \[
+        \boxed{\dot{\rho}_{I_{\bar{e}\bar{e}}}(t) = \gamma_+ - \Gamma_1 \rho_{I_{\bar{e}\bar{e}}}(t)}
+        \]
+    </div>
+    <div class="math">
+        \[
+        \boxed{\dot{\rho}_{I_{\bar{g}\bar{g}}}(t) = \gamma_- - \Gamma_1 \rho_{I_{\bar{g}\bar{g}}}(t)}
+        \]
+    </div>
+    <div class="math">
+        \[
+        \boxed{\dot{\rho}_{I_{\bar{e}\bar{g}}}(t) = - \Gamma_2 \rho_{I_{\bar{e}\bar{g}}}(t) }
+        \]
+    </div>
+    <div class="math">
+        \[
+        \boxed{\dot{\rho}_{I_{\bar{g}\bar{e}}}(t) = - \Gamma_2 \rho_{I_{\bar{g}\bar{e}}}(t) }
+        \]
+    </div>
+    <p>
+        Solving the last two equations and using the initial condition at <span class="math">\(t=0\)</span>:
+    </p>
+    <div class="math">
+        \[
+        \boxed{\rho_{I_{\bar{e}\bar{g}}}(t) = \rho_{\bar{e}\bar{g}}(0) e^{-\Gamma_2 t}}
+        \]
+    </div>
+    <div class="math">
+        \[
+        \boxed{\rho_{I_{\bar{g}\bar{e}}}(t) = \rho_{\bar{g}\bar{e}}(0) e^{-\Gamma_2 t}}
+        \]
+    </div>
+    <p>
+        Solving the first two equations and using the boundary condition at <span class="math">\(t=0\)</span>:
+    </p>
+    <div class="math">
+        \[
+        \boxed{\rho_{I_{\bar{e}\bar{e}}}(t) = \frac{\gamma_+}{\Gamma_1} + \left(\rho_{I_{\bar{e}\bar{e}}}(0)-\frac{\gamma_+}{\Gamma_1}\right)e^{-\Gamma_1 t}}
+        \]
+    </div>
+    <div class="math">
+        \[
+        \boxed{\rho_{I_{\bar{g}\bar{g}}}(t) = \frac{\gamma_-}{\Gamma_1} + \left(\rho_{I_{\bar{g}\bar{g}}}(0)-\frac{\gamma_-}{\Gamma_1}\right)e^{-\Gamma_1 t}}
+        \]
+    </div>
+    <p>
+        The decay rates using the atom and laser parameters:
+    </p>
+    <div class="math">
+        \[
+        \Gamma_1 = \gamma_+ + \gamma_- 
+        \]
+    </div>
+    <div class="math">
+        \[
+        \begin{aligned}
+        \Gamma_1 &= \gamma_+ + \gamma_- \\
+        &= \lambda^2_z \sin^2{\theta} G_z(\Omega_r) + \lambda^2_z \sin^2{\theta} G_z(-\Omega_r) \\
+        &\quad + \lambda^2_x \left[\left(\frac{\cos\theta + 1}{2}\right)^2 (G_x(\Omega_+) + G_x(-\Omega_+)) \right] \\
+        &\quad + \lambda^2_x\left[\left(\frac{\cos\theta - 1}{2}\right)^2 (G_x(\Omega_-) + G_x(-\Omega_-))\right]
+        \end{aligned}
+        \]
+    </div>
+    <div class="math">
+        \[
+        \Gamma_1 = \frac{1}{4\Omega^2_r} \left[ 16\epsilon^2 \lambda^2_z g_{z,+}(\Omega_r) +\lambda^2_x (\omega_0 - \Omega_-)^2 g_{x,+}(\Omega_+) + \lambda^2_x (\omega_0 - \Omega_+)^2 g_{x,+}(\Omega_-) \right]
+        \]
+    </div>
+    <div class="math" style="font-size:0.95em;">
+        \[
+        \Gamma_2 = \frac{1}{8\Omega^2_r} \left[(4\epsilon^2) \lambda^2_x g_{x+}(\Omega) + \lambda^2_x (\omega_0 - \Omega_-)^2 g_{x,+}(\Omega_+) + \lambda^2_x (\omega_0 - \Omega_+)^2 g_{x,+}(\Omega_-) +  16\epsilon^2 \lambda^2_z g_{z,+}(\Omega_r) \right]
+        \]
+    </div>
+    <p>
+        We can recast back to the Schrödinger picture by the transformation:
+    </p>
+    <div class="math">
+        \[
+        \rho(t) = P_t e^{-i\bar{H}t} \rho_I(t) e^{i\bar{H}t} P^{\dagger}_t
+        \]
+    </div>
+    <p>
+        The matrix elements in the Schrödinger picture two-level system basis:
+    </p>
+    <div class="math">
+        \[
+        \boxed{\rho_{ee}(t)=\cos^2{\frac{\theta}{2}} \rho_{I_{\bar{e}\bar{e}}}(t) - \sin{\frac{\theta}{2}} \cos{\frac{\theta}{2}} [e^{-i\Omega_r t} \rho_{I_{\bar{e}\bar{g}}}(t) + e^{i\Omega_r t} \rho_{I_{\bar{g}\bar{e}}}(t)] + \sin^2{\frac{\theta}{2}} \rho_{I_{\bar{g}\bar{g}}}(t)}
+        \]
+    </div>
+    <div class="math">
+        \[
+        \boxed{\rho_{gg}(t) =\cos^2{\frac{\theta}{2}} \rho_{I_{\bar{g}\bar{g}}}(t) + \sin{\frac{\theta}{2}} \cos{\frac{\theta}{2}} [e^{-i\Omega_r t} \rho_{I_{\bar{e}\bar{g}}}(t) + e^{i\Omega_r t} \rho_{I_{\bar{g}\bar{e}}}(t)] + \sin^2{\frac{\theta}{2}} \rho_{I_{\bar{e}\bar{e}}}(t)}
+        \]
+    </div>
+    <div class="math">
+        \[
+        \boxed{\rho_{eg}(t) = e^{-i\Omega t} \left[\sin\theta \frac{\bar{\Delta}(t)}{2} + \cos\theta e^{-\Gamma_2 t}Re(e^{-i\Omega_r t}\rho_{\bar{e}\bar{g}}(0)) + i e^{-\Gamma_2 t} Im(e^{-i\Omega_r t}\rho_{\bar{e}\bar{g}}(0))\right]}
+        \]
+    </div>
+    <div class="math">
+        \[
+        \rho_{ge}(t) = \rho^{\dagger}_{eg}(t)
+        \]
+    </div>
+    <p>
+        Where <span class="math">\(\bar{\Delta}(t) = \rho_{I_{\bar{e}\bar{e}}}(t) - \rho_{I_{\bar{g}\bar{g}}}(t)\)</span> and <span class="math">\(\kappa = \frac{\gamma_--\gamma_+}{2\Gamma_1}\)</span> is a dimensionless quantity, <span class="math">\(\bar{\Delta}(0) = \rho_{\bar{e}\bar{e}}(0) - \rho_{\bar{g}\bar{g}}(0)\)</span>:
+    </p>
+    <div class="math">
+        \[
+        \boxed{\rho_{\bar{e}\bar{e}}(0) = \rho_{ee}(0) \cos^2{\frac{\theta}{2}} + \rho_{gg}(0) \sin^2{\frac{\theta}{2}} + \rho_{eg}(0) \cos{\frac{\theta}{2}} \sin{\frac{\theta}{2}} + \rho_{ge}(0) \cos{\frac{\theta}{2}} \sin{\frac{\theta}{2}}}
+        \]
+    </div>
+    <div class="math">
+        \[
+        \boxed{\rho_{\bar{g}\bar{g}}(0) = \rho_{ee}(0) \sin^2{\frac{\theta}{2}} + \rho_{gg}(0) \cos^2{\frac{\theta}{2}} - \rho_{eg}(0) \cos{\frac{\theta}{2}} \sin{\frac{\theta}{2}} - \rho_{ge}(0) \cos{\frac{\theta}{2}} \sin{\frac{\theta}{2}}}
+        \]
+    </div>
+    <div class="math">
+        \[
+        \boxed{\rho_{\bar{e}\bar{g}}(0) = - \frac{\Delta(0)}{2} \sin\theta + \cos\theta Re(\rho_{eg}(0)) + i Im(\rho_{eg}(0))}
+        \]
+    </div>
+    <div class="math">
+        \[
+        \boxed{\bar{\Delta}(0) = \cos\theta \Delta(0) + 2\sin\theta Re(\rho_{eg}(0))}
+        \]
+    </div>
+    <div class="subsection" id = 'qm-application-thermo'></div>
+    <h3>Thermodynamic Heat and Work Flow</h3>
+    <p>
+        The total energy of the system at time <span class="math">\(t\)</span> in the Schrödinger picture:
+    </p>
+    <div class="math">
+        \[
+        \boxed{U(t) = \frac{\omega_0}{2} \Delta(t) + \epsilon\left[\bar{\Delta}(t) \sin\theta + 2\cos\theta e^{-\Gamma_2 t} Re\left(\rho_{\bar{e}\bar{g}}(0) e^{-i\Omega_r t}\right)\right]}
+        \]
+    </div>
+    <p>
+        The work flow (power) is:
+    </p>
+    <div class="math">
+        \[
+        \boxed{\dot{W}(t) = 2\Omega\epsilon e^{-\Gamma_2 t} \  Im\left(\rho_{\bar{e}\bar{g}}(0) e^{-i\Omega_r t}\right)}
+        \]
+    </div>
+    <p>
+        The time derivative of energy:
+    </p>
+    <div class="math" style="font-size:0.95em;">
+        \[
+        \begin{aligned}
+        \dot{U}(t) =\ & \frac{\omega_0}{2} \cos{\theta} \left(-2\Gamma_1\kappa e^{-\Gamma_1 t} - \Gamma_1 e^{-\Gamma_1 t}\bar{\Delta}(0)\right) \\
+        & - \omega_0 \sin{\theta} \frac{d}{dt} \mathrm{Re} \left[\rho_{\bar{e}\bar{g}}(0) e^{-\Gamma_2 t} e^{ i\Omega_r t}\right]  
+        - \epsilon\left[\sin{\theta}\left(2\Gamma_1 \kappa e^{-\Gamma_1 t} - \Gamma_1 e^{-\Gamma_1 t} \bar{\Delta}(0)\right)\right] \\
+        & - 2\epsilon \Gamma_2 \cos{\theta} e^{-\Gamma_2 t} \mathrm{Re}\left[\rho_{\bar{e}\bar{g}}(0) e^{-i\Omega_r t}\right]
+        - 2\epsilon \cos{\theta} e^{-\Gamma_2 t} \mathrm{Re}\left[\rho_{\bar{e}\bar{g}}(0) (-i\Omega_r ) e^{-i\Omega_r t}\right]
+        \end{aligned}
+        \]
+    </div>
+    <p>
+        The heat flow is given by <span class="math">\(\dot{Q}(t)= \dot{U}(t) - \dot{W}(t)\)</span>.
+    </p>
+    <p>
+        <b>Example:</b> For the case where the system is initially in the ground state, with parameters as in the text, the population inversion is:
+    </p>
+    <div class="math">
+        \[
+        \Delta(t) = - e^{-0.175\omega_0 t} \cos(0.6\omega_0 t)
+        \]
+    </div>
+    <figure style="display: flex; flex-direction: column; align-items: center;"></figure>
+        <img src="images/Resources_Images/Figure_2.png" alt="Population Inversion">
+        <figcaption>Population Inversion</figcaption>
+    </figure>
+    <p>
+        We can see that due to the interaction with the environment, population inversion decays over time and the system goes to a steady state with no population inversion. If there was no interaction with the environment, population inversion would oscillate with time.
+    </p>
+    <p>
+        The work flow (power):
+    </p>
+    <div class="math">
+        \[
+        \dot{W}(t) = -0.3 \omega^2_0 e^{-0.175\omega_0 t} \sin(0.6\omega_0 t)
+        \]
+    </div>
+    <p>
+        The time derivative of energy:
+    </p>
+    <div class="math">
+        \[
+        \dot{U}(t) = -2\kappa \epsilon \Gamma_1 e^{-\Gamma_1 t} + \omega_0 \frac{\Gamma_2}{2} e^{-\gamma_2 t}\cos{\Omega_r t} + \frac{\omega_0}{2} \sin{\Omega_r t}
+        \]
+    </div>
+    <figure>
+        <img src="images/Resources_Images/Figure_1.png" alt="Thermodynamics Quantities">
+        <figcaption>Thermodynamics Quantities: Thermodynamic quantities are plotted as \(\frac{\dot{U}(t)}{\omega^2_0}, \frac{\dot{Q}(t)}{\omega^2_0}\)</figcaption>
+    </figure>
+    <p>
+        From the figure above, we can see that we can extract work from a driven TLS for a limited time. After the system goes to a steady state, there will be no net energy change and also no heat flow, as heat flow is due only to the dissipation which causes the decoherence of the system.
+    </p>
+    <figure>
+        <img src="images/Resources_Images/Figure_3.png" alt="Length of the Bloch vector" >
+        <figcaption>Length of the Bloch vector</figcaption>
+    </figure>
+    <p>
+        From the figure above, we can see that the length of the Bloch vector achieves a constant value after a time when the system achieves a steady state. From the modulus value of the Bloch vector, we can calculate the purity of the system. As seen from the figure, the length is not equal to 1 nor 0, so the system will be in a partially mixed state.
+    </p>
+                <!-- NEW: References section for Quantum Master Equation subpage -->
+                <div class="section" id="qm-references">
+                    <h2 class="noindent">References</h2>
+                    <ol class="bib">
+                        <li id="ref-lidar2019lecture">
+                            Lidar, D. A. "Lecture Notes on the Theory of Open Quantum Systems."
+                            <i>arXiv e-prints</i> (2019): arXiv--1902.
+                            <a href="https://arxiv.org/abs/1902.00967" target="_blank">&#128279; arXiv</a>
+                        </li>
+                        <li id="ref-lidar2001completely">
+                            Lidar, D. A., Bihary, Z., & Whaley, K. B. "From completely positive maps to the quantum Markovian semigroup master equation."
+                            <i>Chemical Physics</i> 268.1-3 (2001): 35-53.
+                            <a href="https://doi.org/10.1016/S0301-0104(01)00235-6" target="_blank">&#128279; DOI</a>
+                        </li>
+                        <li id="ref-breuer2002theory">
+                            Breuer, H.-P., & Petruccione, F. <i>The theory of open quantum systems</i>. Oxford University Press, 2002.
+                        </li>
+                        <li id="ref-blum2012density">
+                            Blum, K. <i>Density matrix theory and applications</i>. Vol. 64. Springer Science & Business Media, 2012.
+                        </li>
+                        <li id="ref-manzano2020short">
+                            Manzano, D. "A short introduction to the Lindblad master equation."
+                            <i>AIP Advances</i> 10.2 (2020): 025106.
+                            <a href="https://doi.org/10.1063/1.5115323" target="_blank">&#128279; DOI</a>
+                        </li>
+                        <li id="ref-svozil2020mathematical">
+                            Svozil, K. <i>Mathematical Methods Of Theoretical Physics</i>. World Scientific Publishing Company, 2020.
+                            <a href="https://books.google.co.in/books?id=lsPVDwAAQBAJ" target="_blank">&#128279; Google Books</a>
+                        </li>
+                        <li id="ref-zeidler2007quantum">
+                            Zeidler, E. <i>Quantum Field Theory I: Basics in Mathematics and Physics: A Bridge between Mathematicians and Physicists</i>. Springer Berlin Heidelberg, 2007.
+                            <a href="https://books.google.co.in/books?id=XYtnGl9enNgC" target="_blank">&#128279; Google Books</a>
+                        </li>
+                        <li id="ref-alicki1979quantum">
+                            Alicki, R. "The quantum open system as a model of the heat engine."
+                            <i>Journal of Physics A: Mathematical and General</i> 12.5 (1979): L103.
+                            <a href="https://doi.org/10.1088/0305-4470/12/5/007" target="_blank">&#128279; DOI</a>
+                        </li>
+                        <li id="ref-juan2021first">
+                            Juan-Delgado, A., & Chenu, A. "First law of quantum thermodynamics in a driven open two-level system."
+                            <i>Physical Review A</i> 104.2 (2021): 022219.
+                            <a href="https://doi.org/10.1103/PhysRevA.104.022219" target="_blank">&#128279; DOI</a>
+                        </li>
+                    </ol>
+                </div>
+                <!-- ...existing code... -->
+    </div>
+    <footer>
+        <div style="padding:1.2em 0; text-align:center; color:#6b7280; font-size:1em; background:#f8fafc;">
+            &copy; 2025 Debdip Guchait.<br>
+            All rights reserved.<br>
+            <span style="font-size:0.97em; color:#64748b;">
+                The images and content on this site are the property of their respective owners and may not be used, reproduced, or distributed without explicit permission.
+            </span>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Internship Report</title>
+    <link rel="stylesheet" href="css/scripts.css">
+
+    <!-- MathJax for LaTeX math rendering -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+    </script>
+    <script src="js/scripts.js"></script>
+    <script>
+    // Section navigation sidebar with collapsible feature and subsections
+    document.addEventListener("DOMContentLoaded", function() {
+        const nav = document.getElementById('section-nav');
+        if (!nav) return;
+        const sections = [
+            {id: "aims", label: "Aims"},
+            {id: "introduction", label: "Introduction & Background"},
+            {id: "methods", label: "Methods"},
+            {id: "design", label: "Design"},
+            {id: "fabrication", label: "Fabrication"},
+            {id: "results", label: "Results", subsections: [
+                {id: "results-table", label: "Table"},
+                {id: "results-fig1", label: "Figure 1"},
+                {id: "results-fig2", label: "Figure 2"}
+            ]},
+            {id: "experimental", label: "Experimental Set-Up"},
+            {id: "acknowledgement", label: "Acknowledgement"},
+            {id: "references", label: "References"}
+        ];
+        // Collapsible toggle button (placed outside nav for visibility)
+        if (!document.getElementById('section-nav-toggle')) {
+            const toggleBtn = document.createElement('button');
+            toggleBtn.id = 'section-nav-toggle';
+            toggleBtn.className = 'section-nav-toggle';
+            toggleBtn.title = 'Collapse/Expand';
+            toggleBtn.innerHTML = '&#9776;';
+            document.body.appendChild(toggleBtn);
+            toggleBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                nav.classList.toggle('section-nav-collapsed');
+                // Move toggle button position
+                if (nav.classList.contains('section-nav-collapsed')) {
+                    toggleBtn.style.left = '18px';
+                } else {
+                    toggleBtn.style.left = '210px';
+                }
+            });
+        }
+        // Section links container
+        let linksDiv = nav.querySelector('.section-nav-links');
+        if (!linksDiv) {
+            linksDiv = document.createElement('div');
+            linksDiv.className = 'section-nav-links';
+            nav.appendChild(linksDiv);
+        }
+        linksDiv.innerHTML = sections.map(s =>
+            `<a href="#${s.id}" id="nav-${s.id}">${s.label}</a>` +
+            (s.subsections ? s.subsections.map(sub =>
+                `<a href="#${sub.id}" class="subsection-link" id="nav-${sub.id}">${sub.label}</a>`
+            ).join('') : '')
+        ).join('');
+        // Highlight active section
+        function onScroll() {
+            let scrollPos = document.documentElement.scrollTop || document.body.scrollTop;
+            let lastId = null;
+            for (const s of sections) {
+                const el = document.getElementById(s.id);
+                if (el && el.offsetTop - 80 <= scrollPos) {
+                    lastId = s.id;
+                }
+                if (s.subsections) {
+                    for (const sub of s.subsections) {
+                        const subEl = document.getElementById(sub.id);
+                        if (subEl && subEl.offsetTop - 80 <= scrollPos) {
+                            lastId = sub.id;
+                        }
+                    }
+                }
+            }
+            // Remove all actives
+            sections.forEach(s => {
+                const link = document.getElementById('nav-' + s.id);
+                if (link) link.classList.remove('active');
+                if (s.subsections) {
+                    s.subsections.forEach(sub => {
+                        const sublink = document.getElementById('nav-' + sub.id);
+                        if (sublink) sublink.classList.remove('active');
+                    });
+                }
+            });
+            // Set active
+            if (lastId) {
+                const activeLink = document.getElementById('nav-' + lastId);
+                if (activeLink) activeLink.classList.add('active');
+            }
+        }
+        window.addEventListener('scroll', onScroll);
+        onScroll();
+
+        // Add anchors for Results subsections if not present
+        const placeholder = document.querySelector('.placeholder-section');
+        if (placeholder) {
+            if (!document.getElementById('results-table')) {
+                const tableSection = placeholder.querySelector('.section table');
+                if (tableSection) {
+                    const anchor = document.createElement('a');
+                    anchor.id = 'results-table';
+                    tableSection.parentNode.insertBefore(anchor, tableSection);
+                }
+            }
+            if (!document.getElementById('results-fig1')) {
+                const fig1 = placeholder.querySelector('img[src="Fig_1.png"]');
+                if (fig1) {
+                    const anchor = document.createElement('a');
+                    anchor.id = 'results-fig1';
+                    fig1.parentNode.insertBefore(anchor, fig1);
+                }
+            }
+            if (!document.getElementById('results-fig2')) {
+                const fig2 = placeholder.querySelector('img[src="Fig_2.png"]');
+                if (fig2) {
+                    const anchor = document.createElement('a');
+                    anchor.id = 'results-fig2';
+                    fig2.parentNode.insertBefore(anchor, fig2);
+                }
+            }
+        }
+    });
+    </script>
+    <!-- Add html2pdf.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+    <!-- Side section navigation bar (like index.html) -->
+    <nav class="side-nav" id="sideNav">
+        <div class="nav-title">Sections</div>
+        <a href="#aims" id="nav-aims">Aims</a>
+        <a href="#introduction" id="nav-introduction">Introduction &amp; Background</a>
+        <a href="#methods" id="nav-methods">Methods</a>
+        <a href="#design" id="nav-design">Design</a>
+        <a href="#fabrication" id="nav-fabrication">Fabrication</a>
+        <a href="#results" id="nav-results">Results</a>
+        <a href="#results-table" id="nav-results-table" class="subsection-link" style="padding-left:2.5em;font-size:0.97em;">Table</a>
+        <a href="#results-fig1" id="nav-results-fig1" class="subsection-link" style="padding-left:2.5em;font-size:0.97em;">Figure 1</a>
+        <a href="#results-fig2" id="nav-results-fig2" class="subsection-link" style="padding-left:2.5em;font-size:0.97em;">Figure 2</a>
+        <a href="#experimental" id="nav-experimental">Experimental Set-Up</a>
+        <a href="#acknowledgement" id="nav-acknowledgement">Acknowledgement</a>
+        <a href="#references" id="nav-references">References</a>
+    </nav>
+    <button class="side-nav-toggle" id="sideNavToggle" aria-label="Toggle navigation">&#9776;</button>
+    <div class="main-center">
+        <div class="nav-links" style="margin-bottom:2.5em; margin-top:1.5em;">
+            <a href="index.html">Home</a>
+            <a href="blogs.html">Blogs</a>
+            <div class="dropdown">
+                <a href="report.html" class="dropbtn" style="position:relative; z-index:2;">Resources &#9662;</a>
+                <div class="dropdown-content">
+                    <a href="OIST_internship.html" style="display:block; padding:0.7em 1.2em; color:#4f46e5; text-decoration:none;">OIST Internship</a>
+                    <a href="IITG_Internship.html" style="display:block; padding:0.7em 1.2em; color:#4f46e5; text-decoration:none;">IITG Internship</a>
+                </div>
+            </div>
+            <!-- Remove JS-injected section dropdown -->
+        </div>
+        <div class="placeholder-section" style="position:relative;">
+            <!-- Internship Report Subpage -->
+            <div class="header"></div>
+            <h1>Internship Report</h1>
+            <div class="subtitle">
+                Characterization of Multiple Resonator Device for NV Center Decoherence Study
+            </div>
+            <div class="vspace"></div>
+            <b>Student Name:</b> Debdip Guchait<br>
+            <div class="vspace"></div>
+
+            <div class="section" id="aims">
+                <h2 class="noindent">Aims</h2>
+                <p>
+                    The project aims to design, fabricate, test, and implement multiple microwave superconducting resonators on a single chip, targeting the frequency range corresponding to spin transitions between the sub-levels of the triplet ground state around <span class="math">\( \mathrm{50~mT} \)</span> of nitrogen-vacancy [<span class="math">\( \mathrm{NV^{-}} \)</span>] centers in diamond. This aligns with the investigation of decoherence effects on the [<span class="math">\( \mathrm{NV^{-}} \)</span>] centers in diamond due to nitrogen-related impurities, using a superconducting microwave resonator at millikelvin temperature.
+                </p>
+            </div>
+
+            <div class="section" id="introduction">
+                <h2 class="noindent">Introduction &amp; Background</h2>
+                <p>
+                    In recent years defect centers in large bandgap crystals and superconducting circuit-based devices have become leading platforms in quantum information technology. <span class="math">\( \mathrm{NV^{-}} \)</span> defect center in diamond is an important platform in quantum sensing, enabling microwave field spin manipulation, as a distinguishable single-photon source at optical wavelengths, as a memory element for quantum information, quantum-limited maser gain medium or a quantum transduction medium. <span class="math">\( \mathrm{NV^{-}} \)</span> have been investigated rigorously for over two decades, making it one of the most studied defect centers, however a systematic study of factors limiting its spin coherence properties at low temperature is still lacking. In a recent article <a href="#ref-bauch2020decoherence" target="_self">[1]</a><a href="https://doi.org/10.1103/PhysRevB.102.134210" target="_blank" style="margin-left:2px;">&#128279;</a>, researchers studied coherence properties of <span class="math">\( \mathrm{NV^{-}} \)</span> at room temperature (RT), identifying nitrogen concentration within the diamond crystal as a limiting factor. We are interested in low temperature coherence properties and aim to investigate the coherence limits at milliKelvin temperatures.
+                </p>
+                <p>
+                    In general EPR experiments, single spin coupling to AC magnetic fields is very low. To overcome the small sensitivity we work in the regime of cavity quantum electrodynamics. Here we use a resonator fabricated from a superconductor. The simplest resonator model is an inductor-capacitor (LC) oscillator. Its Hamiltonian can be modeled as a harmonic oscillator
+                    <div class="math">\[
+                    \hat{H} = \frac{\hat{\phi}^2}{2L} + \frac{\hat{q}^2}{2C} = \hbar \omega_0 \left(\hat{a}^{\dagger} \hat{a} + \frac{1}{2}\right)
+                    \]</div>
+                    where <span class="math">\( \hat{\phi} \)</span> is the quantum operator for flux in the inductor, <span class="math">\( \hat{q} \)</span> is the quantum operator for charge on the capacitor, <span class="math">\( \hat{a}^{\dagger}, \hat{a} \)</span> are quantization operators such that <span class="math">\( \hat{N} = \hat{a}^{\dagger} \hat{a} \)</span> is number of excitation in the oscillator. The induced current and voltage give rise to the associated electric <span class="math">\( \hat{\mathbf{E}}(r) = i\delta \mathbf{E}(r) (\hat{a}-\hat{a}^{\dagger}) \)</span> and magnetic field <span class="math">\( \hat{\mathbf{B}}(r) = \delta \mathbf{B}(r) (\hat{a}+\hat{a}^{\dagger}) \)</span>, where <span class="math">\( \delta \mathbf{E}(r), \delta \mathbf{B}(r) \)</span> are the root-mean-square (rms) vacuum fluctuation at position <span class="math">\( \vec{r} \)</span> of the resonator. This vacuum fluctuations play a critical role in defining single spin-resonator coupling constant <span class="math">\( g_{0} \)</span> and the Rabi frequency <span class="math">\( \Omega_s \)</span>. A higher <span class="math">\( g_0 \)</span> value reduces the number of spins required to detect the spin magnetization.
+                </p>
+                <p>
+                    In the electronic structure of <span class="math">\( \mathrm{NV^{-}} \)</span>, both the excited state and ground state are triplet spin state [spin quantum number <span class="math">\( S=1 \)</span>], with a singlet [<span class="math">\( S = 0 \)</span>] metastable state in between them. The ground state spin system has zero field splitting <span class="math">\( D/2\pi = 2.878 \)</span> GHz between <span class="math">\( \ket{0} \)</span> &amp; <span class="math">\( \ket{\pm1} \)</span> and a strain induced splitting <span class="math">\( E/2\pi = 1-5 \)</span> MHz between <span class="math">\( \ket{1} \)</span> and <span class="math">\( \ket{-1} \)</span> <a href="#ref-grezes2016" target="_self">[2]</a><a href="https://doi.org/10.1016/j.crhy.2016.07.009" target="_blank" style="margin-left:2px;">&#128279;</a>. Under a strong magnetic field, we can restrict ourselves to a two-level system between <span class="math">\( \ket{0} \)</span> &amp; one of the <span class="math">\( \ket{\pm1} \)</span>. A key property of the <span class="math">\( \mathrm{NV^{-}} \)</span> center is its ability to initialize the spin states to <span class="math">\( \ket{0} \)</span> via optical excitation. The spin states can be manipulated using microwave (MW) excitation.
+                </p>
+                <p>
+                    This spin-resonator system is used to transfer quantum information coherently to the spins. The interaction between a two-level system and the resonator can be modeled by Jaynes-Cummings form Hamiltonian
+                    <div class="math">\[
+                    \hat{H_{int}} = \gamma_{e} \mathbf{S} \cdot \mathbf{B} = g_{0} \left(\hat{a}\hat{\sigma_{+}}+\hat{a}^{\dagger}\hat{\sigma_{-}}\right)
+                    \]</div>
+                    where <span class="math">\( g_{0} = - \gamma_e {\delta \mathbf{B}} \cdot \mathbf{S} \)</span>, and <span class="math">\( \sigma_-, \sigma_+ \)</span> are the Pauli spin ladder operation. The input-output theory allows us to extract information about the spin system from the reflection spectrum of the hybrid spin-resonator system <a href="#ref-grezes2016" target="_self">[2]</a><a href="https://doi.org/10.1016/j.crhy.2016.07.009" target="_blank" style="margin-left:2px;">&#128279;</a>.
+                </p>
+            </div>
+
+            <div class="section" id="methods">
+                <h2 class="noindent">Methods</h2>
+                <p>
+                    In this project, superconducting resonators were nanofabricated in a cleanroom facility using maskless optical lithography, reactive ion etching, development, and spin coating and ultra-sonic cleaning. All the measurements at cryogenic temperature were conducted within a dilution refrigerator [DR] (Bluefors, LD400). We used a Keysight E5071C vector-network analyzer (VNA), for continuous wave (CW) microwave measurements, and Quantum Machine OPX+ for all pulse experiments. Simulations of the resonators were performed using RF module of COMSOL Multiphysics (finite-element method) and the Method-of-Moment based planar EM simulator Sonnet.
+                </p>
+            </div>
+
+            <div class="section" id="design">
+                <h2 class="noindent">Design</h2>
+                <p>
+                    To overcome the weak interaction between spin magnetic dipole moment and the magnetic field, a resonator with higher <span class="math">\( \delta \mathbf{B_0} \)</span> at the spins is desirable. In a superconducting microwave resonator, the desired <span class="math">\( \delta \mathbf{B_0} \)</span> can be easily obtained with a miniaturized resonator, which also allows integration of multiple spin samples in the limited sample space of the DR.
+                </p>
+                <p>
+                    The choice of superconducting resonators introduces a few challenges in electron spin resonance ESR spectroscopy. In ESR spectroscopy, a DC magnetic field is applied to break the spin degeneracy and to match one of the spin transitions <span class="math">\( \omega_s \)</span> to the resonance frequency, <span class="math">\( \omega_0 \)</span>, of the resonator. A low-loss, high-critical field superconductor is required for the resonator. The Meissner effect is the phenomenon of a magnetic field being expelled from the superconductor. In general, type-I superconductors have a low critical field <span class="math">\( H_c \)</span>, whereas type-II superconductors can possess a much higher upper critical field <span class="math">\( H_{c2} \)</span>. Of these type-II superconductors, Nb-based superconductors have some of the highest <span class="math">\( H_{c2} \)</span> currently known. For this reason, we fabricated our resonators using <span class="math">\( \mathrm{Nb_x Ti_{1-x}N} \)</span>, a superconductor known for its high <span class="math">\( H_{c2} \)</span>.
+                </p>
+                <p>
+                    In the free electron model, charge carriers having mass and velocity, carry kinetic energy. We can therefore define a kinetic inductance <span class="math">\( L_k \)</span>, where the <span class="math">\( K.E = \frac{1}{2} L_k I^{2} \)</span>. <span class="math">\( L_k \)</span> induces an impedance when there is a change in current, similar to a geometrical inductance <span class="math">\( L_g \)</span>. We therefore need to characterize this inductance to match the characteristic impedance of the transmission line <span class="math">\( 50\Omega \)</span> and desired resonance frequency. To do this, we first need to know the sheet inductance <span class="math">\( L_k/\square \)</span> ('per-square kinetic inductance') of <span class="math">\( \mathrm{Nb_x Ti_{1-x}N} \)</span> film. We estimate <span class="math">\( L_k/\square \)</span> by measuring a few test quasi-fractal resonators of different sizes and determining their resonant frequency. We perform simulations of the same devices using Sonnet software and adjust <span class="math">\( L_k/\square \)</span> until they match the experimental <span class="math">\( \omega_0 \)</span> data. Details are given in the results section. The kinetic inductance per unit length is calculated as <span class="math">\( L_k / \text{length} = L_0 = \frac{L_k/\square}{w} \)</span>, where <span class="math">\( w \)</span> is the wire width.
+                </p>
+                <p>
+                    The internal quality factor <span class="math">\( Q_{i} \)</span> of a superconducting microwave resonator depends on the losses due to external magnetic field <span class="math">\( Q_{i,B_0} \)</span>, two-level systems <span class="math">\( TLS \)</span> in dielectric substrate <span class="math">\( Q_{i,die} \)</span>, ohmic loss <span class="math">\( Q_{i,ohm} \)</span> and radiation loss <span class="math">\( Q_{i,rad} \)</span>. Dielectric loss can be reduced by improving the substrate with reduced two-level systems. In high <span class="math">\( \mathrm{T_c} \)</span> superconductor operating at <span class="math">\( 12-20 \)</span> mK, ohmic loss are negligible. Radiation loss increases when the phase velocity <span class="math">\( v_p \)</span> of the electromagnetic field in the line exceeds that in the substrate, <span class="math">\( v_p = \frac{1}{\sqrt{lc}} \)</span>, where <span class="math">\( l = l_g + l_k \)</span> is the inductance per unit length and <span class="math">\( c \)</span> is the capacitance per unit length. An increase in <span class="math">\( l_k \)</span> results in a reduced phase velocity in the line, which is achieved by reducing the wire width <a href="#ref-hahnle2020suppression" target="_self">[3]</a><a href="https://doi.org/10.1103/PhysRevApplied.13.054062" target="_blank" style="margin-left:2px;">&#128279;</a>.
+                </p>
+                <p>
+                    Conversely, an inhomogeneous microwave magnetic field across the resonator plane can cause variation in coupling to individual spins <span class="math">\( \omega_s \)</span> placed on top of the resonator, leading to broader inhomogeneous linewidth and reduced free-induction decay time <span class="math">\( \mathrm{T_2^*} \)</span>. We engineer a homogeneous magnetic field at the spins being interrogated.
+                </p>
+            </div>
+
+            <div class="section">
+                <table>
+                    <thead>
+                        <tr>
+                            <th colspan="6">Test Resonators</th>
+                            <th colspan="4">Final Device Resonators</th>
+                        </tr>
+                        <tr>
+                            <th></th>
+                            <th>\(\omega_0\) [GHz]</th>
+                            <th>\(Q_{ext}\)</th>
+                            <th></th>
+                            <th>\(\omega_0\) [GHz]</th>
+                            <th>\(Q_{ext}\)</th>
+                            <th></th>
+                            <th>ID</th>
+                            <th>\(\omega_0\) [GHz]</th>
+                            <th>\(Q_{ext}\)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td rowspan="10" style="writing-mode: vertical-lr; transform: rotate(180deg);">\(l = 1400 \mu m\) \(t = 107nm\), \(d=300\mu m\)</td>
+                            <td>4.0018</td><td>36742</td>
+                            <td rowspan="10" style="writing-mode: vertical-lr; transform: rotate(180deg);">\(l = 1700 \mu m\) \(t = 103nm\), \(d=300\mu m\)</td>
+                            <td>3.2884</td><td>14458</td>
+                            <td rowspan="10" style="writing-mode: vertical-lr; transform: rotate(180deg);">\(l = 1400 \mu m\), \(t=100nm\), \(d=300\mu m\)</td>
+                            <td>R1-1</td><td>4.231</td><td>1152</td>
+                        </tr>
+                        <tr><td>4.0286</td><td>15664</td><td>3.334</td><td>4988</td><td>R2-1</td><td>4.436</td><td>780</td></tr>
+                        <tr><td>4.0387</td><td>14006</td><td>3.3913</td><td>14354</td><td>R3-1</td><td>4.369</td><td>945</td></tr>
+                        <tr><td>4.0733</td><td>7251</td><td>3.414</td><td>2186</td><td>R4-1</td><td>4.441</td><td>763</td></tr>
+                        <tr><td>4.1013</td><td>14330</td><td>3.432</td><td>14590</td><td>R5-1</td><td>4.466</td><td>777</td></tr>
+                        <tr><td>4.1456</td><td>2981</td><td>3.519</td><td>1582</td><td>R1-2</td><td>4.231</td><td>1152</td></tr>
+                        <tr><td>4.2154</td><td>4914</td><td>3.541</td><td>6552</td><td>R2-2</td><td>4.326</td><td>780</td></tr>
+                        <tr><td>4.2687</td><td>4913</td><td>--</td><td>--</td><td>R3-2</td><td>4.369</td><td>945</td></tr>
+                        <tr><td>4.3403</td><td>4888</td><td>3.773</td><td>6402</td><td>R4-2</td><td>4.4414</td><td>763</td></tr>
+                        <tr><td>4.4340</td><td>4555</td><td>3.904</td><td>1050</td><td>R5-2</td><td>4.466</td><td>777</td></tr>
+                        <tr>
+                            <td colspan="3">\(max \ Q_{i} = 5.34\times 10^{5}\)</td>
+                            <td colspan="3">\(max \ Q_{i} = 3.09\times 10^{5}\)</td>
+                            <td colspan="4">* \(Q_{i}\) can't be estimated.</td>
+                        </tr>
+                    </tbody>
+                    <caption>
+                        Table 1. Fabricated resonator response details for both test and final measurement devices.<br>
+                        For the final device, resonator names are such that R"resonator number"-"transmission line number".<br>
+                        \(l\): length of the resonator prongs, \(t\): thickness of the superconducting film, \(d\): diameter of the loop at the top of the resonator.<br>
+                        As we are in a very over-coupled region (\(Q_i \gg Q_{ext}\)), we can't estimate the \(Q_{i}\) for the final device.
+                    </caption>
+                </table>
+            </div>
+
+            <div class="section">
+                <div class="figure" style="text-align:center;">
+                    <img src="images/Resources_Images/FIg_1.png" alt="Figure 1" style="max-width:100%; height:auto; display:block; margin:0 auto;">
+                    <div class="figure-caption" style="text-align:center; color:#4f46e5; font-size:1em; margin-top:0.5em;">
+                        Figure 1. [a] An optical image of a resonator. [b] Is a Comsol simulated vacuum field fluctuation. We can observe that the induced magnetic field is homogeneous at the center of the loop. [c] A cross sectional view of the \(g_0\) through the center of the loop. [d] An image of the resonator chip with \(10\) resonators. [e] An overall design of the full experimental device. [f] An assembled device within the copper housing [without the optical fiber].
+                    </div>
+                </div>
+                <p>
+                    Our resonator designs are based on the quasi-fractal, notch type, tuning fork quarter wave resonator shown in Fig-1a. Each resonator consists of a \(U-\)shaped inductive element consisting of a \(2\mu m \) wide wire and an interdigitated capacitor located between the two prongs. The two prongs of the \(U-\)shaped inductor are separated by \(148\mathrm{\mu m}\). In the final measurement resonators, \(Q_{ext} \sim 800 \) was chosen to approximately match the inhomogeneous linewidth of ensemble \(\mathrm{NV^{-}}\) spins. The ground planes are separated from the resonator prongs by \(150\mathrm{\mu m}\), and are designed with quasi-fractal geometry to reduce flux focusing near the resonator, thereby improving the \(Q_{i}\) <a href="#ref-de2012magnetic" target="_self">[4]</a><a href="https://doi.org/10.1063/1.4729623" target="_blank" style="margin-left:2px;">&#128279;</a>.
+                </p>
+                <p>
+                    To estimate the kinetic inductance of the film, we designed test resonators of two different prong lengths \(l\), having different \(\omega_0\), summarized in the result section. Each chip was fabricated with \(100 \mathrm{nm}\) \(\mathrm{Nb_x Ti_{1-x}N}\). Each chip contains 10 resonators of different \(\omega_0\) and \(Q_{ext}\) to a transmission line. For the final measurement device, we have designed a chip with two transmission lines, each transmission line is used to interrogate five distinct resonators. The design is shown in fig-1d.
+                </p>
+                <p>
+                    A new sample holder for the chip and PCB was designed to mount the sample on the mixing chamber plate of the DR. A PCB was designed to accommodate a maximum of eight transmission lines to interface mini-SMP connectors to the chip containing the resonators. The PCB and chip were placed inside a copper housing having \(10\) optic fiber hole \(\left( 500\mathrm{\mu m} \ \text{diameter}\right)\) to support optical access for the spin ensemble initialization and readout. The overall design is shown in fig-1e.
+                </p>
+            </div>
+
+            <div class="section" id="fabrication">
+                <h2 class="noindent">Fabrication</h2>
+                <p>
+                    The resonators are fabricated on a \(300 \mathrm{\mu m}\) thick single-crystal \(3 \mathrm{in}\)-sapphire \(\left(\mathrm{Al2O3}\right)\) wafer [permittivity \(\epsilon_{r,\perp} = 11.34, \epsilon_{r,\parallel} = 9.34\) to the C-plane]. Before the evaporative deposition of the \(\mathrm{Nb_x Ti_{1-x}N}\), wafers are cleaned with isopropyl alcohol (IPA) and backed at \(105^oC\). The thickness of the deposited film by evaporation was controlled using a pre-calibrated deposition time \(58 \mathrm{s}\) for \(100\mathrm{nm}\). The evaporated wafer with \(\mathrm{Nb_x Ti_{1-x}N}\) spin-coated with OPA (Optical Photo-resist primer) and \(\mathrm{AZMIR703}\) as a positive optical photo-resist. The evaporated wafer was pre-backed for \(1\) min. The resonator pattern was exposed using standard maskless optical lithography with UV light using the Heidelberg Inst. MLA 150. The pattern was developed with AZ300 MIF for \(2\) min, rinsed with deionized water, and post-backed at \(105^o \mathrm{C}\) for 2 min to remove any water residue. Reactive ion etching (RIE) with \(\mathrm{{CF_4}}\) was used to etch the \(\mathrm{Nb_x Ti_{1-x}N}\) from the exposed regions of the chip. After the RIE, the residue resist mask was removed with ultra-sonication in Acetone, followed by IPA. The wafer was diced to individual chips. The resonator chips were wire bonded to the PCB and measured in the DR at \(12\mathrm{mK}\).
+                </p>
+            </div>
+
+            <div class="section" id="results">
+                <h2 class="noindent">Results</h2>
+                <p>
+                    COMSOL was used to simulate the vacuum electromagnetic field fluctuations of the resonator, a key parameter determining <span class="math">\( g_{0} \)</span>. The resonator of a target <span class="math">\( \omega_0 \)</span> having <span class="math">\( Q_{ext} \approx 800 \)</span> was designed with the help of Sonnet simulations based on the estimated <span class="math">\( L_k/\square \)</span>. Sapphire was defined as a block [<span class="math">\( 3\times 0.75\times0.3 \ \mathrm{mm} \)</span>] of <span class="math">\( \epsilon_r = 11.34 \)</span>. A 2-D drawing of the resonator was imported onto the sapphire block. An air layer of thickness <span class="math">\( 1\mathrm{mm} \)</span> was included to simulate the device environment. The vacuum EM field fluctuation distribution of the final device is shown in Fig-1b, [test resonator simulations are not shown here]. The resonator design is optimized to have a homogeneous magnetic field distribution sustained by the resonator at the center of the loop at the very top section. A map of effective <span class="math">\( g_{0} \)</span> in the plane perpendicular the 2-D resonator is shown in fig-1c. The transmission lines used to interrogate each resonator were designed as <span class="math">\( 50\Omega \)</span> CPWs. A chip with a diamond on top is placed within PCB cutout and enclosed in the copper housing, as shown in Fig-1f.
+                </p>
+                <p>
+                    The resonator frequencies <span class="math">\( \omega_0 \)</span> and external quality factor <span class="math">\( Q_{ext} \)</span> for both test and final devices are summarized in Table 1. We use the QKit circle fit <a href="#ref-probst2015" target="_self">[5]</a><a href="https://doi.org/10.1063/1.4907935" target="_blank" style="margin-left:2px;">&#128279;</a> in the imaginary plane to extract <span class="math">\( Q_{i} \)</span>, <span class="math">\( Q_{ext} \)</span>, and <span class="math">\( \omega_0 \)</span> fig-2a and 2b. We estimate a <span class="math">\( Q_i \approx 5.34\times 10^5 \)</span>. We estimate <span class="math">\( L_k/\square = 1.85\mathrm{pH} \)</span> for a <span class="math">\( 107\mathrm{nm} \)</span> thick <span class="math">\( \mathrm{Nb_x Ti_{1-x}N} \)</span> by repetitive simulation of one of the test resonators until the simulation <span class="math">\( \omega_0 \)</span> matches the experimental result. Using the estimated value for the <span class="math">\( 107 \mathrm{nm} \)</span> film, we estimate <span class="math">\( L_k/\square = 1.97\mathrm{pH} \)</span> for <span class="math">\( 100\mathrm{nm} \)</span> thickness superconducting film with the equation
+                    <div class="math">\[
+                    L_k/\square = \mu_0 \lambda \coth\left(\frac{t}{\lambda}\right)
+                    \]</div>
+                    <a href="#ref-PhysRevLett.109.107003" target="_self">[6]</a><a href="https://doi.org/10.1103/PhysRevLett.109.107003" target="_blank" style="margin-left:2px;">&#128279;</a> leads to the <span class="math">\( L_k = 985\mathrm{nH/m} \)</span> for a <span class="math">\( 2\mathrm{\mu m} \)</span> wide wire of <span class="math">\( 100\mathrm{nm} \)</span>. Increased power changes <span class="math">\( \omega_0 \)</span> and <span class="math">\( Q_{ext} \)</span> due to the nonlinearity of the kinetic inductance, and at the peak power, superconductivity starts to break due to the breaking of cooper pairs [not shown in the figure].
+                </p>
+                <p>
+                    Under an external magnetic field, in the type-II superconductors vortices are generated around the penetrated field lines, and become a prominent loss mechanism. We show in fig-2c &amp; 2d that under <span class="math">\(  \vec{B}_0 \perp \)</span> to the resonator, the resonator loss increases after <span class="math">\( 20\mathrm{mT} \)</span>, but with <span class="math">\(  \vec{B}_0  \parallel \)</span> to the resonator, the resonator is more robust.
+                </p>
+                <p>
+                    Finally, in fig-2f, 2g, 2h we show the results with the diamonds on top of the resonators.
+                </p>
+                <p>
+                    The final device spectroscopy results are summarized in Table 1. As we are in the highly over-coupling region between the transmission line and resonator, <span class="math">\( Q_{int} \)</span> cannot be estimated from the fit. We estimated the <span class="math">\( Q_{int} \)</span> of the resonators in the test experiment and believe that it stays the same in both cases, as we used the same fabrication procedure and used same machinery dedicated to the fabrication of <span class="math">\( \mathrm{Nb_x Ti_{1-x}N} \)</span>.
+                </p>
+            </div>
+
+            <div class="section">
+                <div class="figure" style="text-align:center;">
+                    <img src="images/Resources_Images/Fig_2.png" alt="Figure 2" style="max-width:100%; height:auto; display:block; margin:0 auto;">
+                    <div class="figure-caption" style="text-align:center; color:#4f46e5; font-size:1em; margin-top:0.5em;">
+                        Figure 2. [a] A resonator response at \(12\)mK temperature and a fit from the circle-fit method. [b] Circle fit in the complex plane. [c] and [d] The resonator response under static magnetic field parallel (\(\parallel\)) and perpendicular (\(\perp\)) to the resonator plane respectively. We see very early degradation of the resonator response under \(\perp\) magnetic field. [e] Fridge wiring. [f] Transmission measurement. We are readily able to identify four resonances, shown in red arrow. [g] Zoomed image of two resonances marked inside the red box in [f]. [h] transmission spectrum vs magnetic field with diamonds on top of the resonators. Around \(150\)mT we see, the P1 centers in diamond and inset: NV- center resonances at around \(51.4\)mT. [Magnetic field is not aligned with the NV- axis.]
+                    </div>
+                </div>
+                <p>
+                    <!-- ...existing code... -->
+                </p>
+                <!-- ...existing code... -->
+            </div>
+
+            <div class="section" id="experimental">
+                <h2 class="noindent">Experimental Set-Up</h2>
+                <p>
+                    The resonator is thermally anchored to the \(10\mathrm{mK}\) stage and is placed at the center of the magnetic field of the superconducting vector magnets, which is thermalized at \(4\)K. On each line, attenuator, low-pass filters and IR filters are installed. The input CW line A1 and the pulse line C2 are merged using a directional coupler at the \(10\mathrm{mk}\) mixing chamber plate and directed to one of the ports of the transmission line. The transmitted signal is directed through a double circulator to the readout line \(O1\) equipped with a high electron mobility transistor amplifier (HEMT), at \(4\)K plate and a cryogenic switch is installed to protect the HEMT from strong microwave signal that could damage the HEMT. The input/output of the VNA is connected to the DR CW input line A1 and output line O2 for CW measurements as shown in Fig-2e. The Cryo-microwave switch is kept open during CW measurements. The transmission spectrum of the resonator chip inside the DR is measured through an RT microwave amplifier.
+                </p>
+            </div>
+
+            <div class="section" id="acknowledgement">
+                <h2 class="noindent">Acknowledgement</h2>
+                <p>
+                    My project is under the supervision of Dr. Hiroki Takahashi. OIST Ph.D. student Mathieu Couillard and STG Dr. Yuimaru Kubo do direct supervision. I sincerely acknowledge the OIST nanofabrication facility, the OIST machine shop, Dr. Hirotaka Terai, and the cleanroom nanofabrication facility of the Superconductive ICT Device Laboratory, Advanced ICT Research Institute, NICT, Kobe, Japan. I also thank KDI Co., Ltd. for helping during PCB design and fabrication.
+                </p>
+            </div>
+
+            <div class="section" id="references">
+                <h2 class="noindent">References</h2>
+                <ol class="bib">
+                    <li id="ref-bauch2020decoherence">
+                        Bauch, E., et al. "Decoherence of nitrogen-vacancy centers in diamond."
+                        <i>Physical Review B</i> 102.13 (2020): 134210.
+                        <a href="https://doi.org/10.1103/PhysRevB.102.134210" target="_blank">&#128279; DOI</a>
+                    </li>
+                    <li id="ref-grezes2016">
+                        Grèzes, C., et al. "Towards a spin-ensemble quantum memory for superconducting qubits."
+                        <i>Comptes Rendus Physique</i> 17.7 (2016): 693-704.
+                        <a href="https://doi.org/10.1016/j.crhy.2016.07.009" target="_blank" style="margin-left:2px;">&#128279; DOI</a>
+                    </li>
+                    <li id="ref-hahnle2020suppression">
+                        Hähnle, B., et al. "Suppression of radiation loss in superconducting microwave resonators by kinetic inductance engineering."
+                        <i>Physical Review Applied</i> 13.5 (2020): 054062.
+                        <a href="https://doi.org/10.1103/PhysRevApplied.13.054062" target="_blank">&#128279; DOI</a>
+                    </li>
+                    <li id="ref-de2012magnetic">
+                        de Graaf, S. E., et al. "Magnetic field resilient superconducting coplanar waveguide resonators for hybrid cQED experiments."
+                        <i>Applied Physics Letters</i> 100.23 (2012): 232601.
+                        <a href="https://doi.org/10.1063/1.4729623" target="_blank">&#128279; DOI</a>
+                    </li>
+                    <li id="ref-probst2015">
+                        Probst, S., et al. "Efficient and robust analysis of complex scattering data under noise in microwave resonators."
+                        <i>Review of Scientific Instruments</i> 86.2 (2015): 024706.
+                        <a href="https://doi.org/10.1063/1.4907935" target="_blank">&#128279; DOI</a>
+                    </li>
+                    <li id="ref-PhysRevLett.109.107003">
+                        Annunziata, A. J., et al. "Tunable superconducting nanoinductors."
+                        <i>Physical Review Letters</i> 109.10 (2012): 107003.
+                        <a href="https://doi.org/10.1103/PhysRevLett.109.107003" target="_blank">&#128279; DOI</a>
+                    </li>
+                    
+                </ol>
+            </div>
+        </div>
+    </div>
+    <footer>
+        <div style="padding:1.2em 0; text-align:center; color:#6b7280; font-size:1em; background:#f8fafc;">
+            &copy; 2025 Debdip Guchait.<br>
+            All rights reserved.<br>
+            <span style="font-size:0.97em; color:#64748b;">
+                The images and content on this site are the property of their respective owners and may not be used, reproduced, or distributed without explicit permission.
+            </span>
+        </div>
+    </footer>
+    <script>
+    // Side section navigation bar toggle and active highlight (like index.html)
+    const sideNav = document.getElementById('sideNav');
+    const sideNavToggle = document.getElementById('sideNavToggle');
+    function toggleSideNav() {
+        sideNav.classList.toggle('closed');
+    }
+    sideNavToggle.addEventListener('click', toggleSideNav);
+
+    // Highlight active nav link on scroll
+    const sectionIds = [
+        'aims', 'introduction', 'methods', 'design', 'fabrication',
+        'results', 'results-table', 'results-fig1', 'results-fig2',
+        'experimental', 'acknowledgement', 'references'
+    ];
+    const navLinks = sectionIds.map(id => document.getElementById('nav-' + id));
+    window.addEventListener('scroll', () => {
+        let fromTop = window.scrollY + 80;
+        sectionIds.forEach((id, idx) => {
+            const section = document.getElementById(id);
+            if (section && section.offsetTop <= fromTop && section.offsetTop + section.offsetHeight > fromTop) {
+                navLinks[idx].classList.add('active');
+            } else {
+                navLinks[idx].classList.remove('active');
+            }
+        });
+    });
+    // Smooth scroll for nav links
+    navLinks.forEach(link => {
+        link.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.getElementById(this.getAttribute('href').substring(1));
+            if (target) {
+                window.scrollTo({ top: target.offsetTop - 30, behavior: 'smooth' });
+            }
+        });
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // REMOVE PRINT BUTTON FUNCTIONALITY AND RELATED JS
+    });
+    </script>
+</body>
+</html>
