@@ -288,6 +288,31 @@
     <!-- Splide JS -->
     <script src="https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/js/splide.min.js"></script>
     <script>
+        // Ensure side panel starts closed on mobile/tablet
+        document.addEventListener('DOMContentLoaded', function () {
+            const sideNav = document.getElementById('sideNav');
+            if (window.innerWidth <= 900) {
+                sideNav.classList.add('closed');
+            }
+            new Splide('#image-carousel', {
+                type: 'loop',
+                perPage: 2,
+                focus: 'left',
+                arrows: true,
+                pagination: true,
+                autoplay: true,
+                interval: 2500,
+                pauseOnHover: false,
+                pauseOnFocus: false,
+                gap: '5px',
+                height: '5in',
+                breakpoints: {
+                    900: { perPage: 1, height: '3.5in' },
+                    600: { perPage: 1, height: '2.5in' }
+                }
+            }).mount();
+        });
+
         // Collapsible nav logic
         const sideNav = document.getElementById('sideNav');
         const sideNavToggle = document.getElementById('sideNavToggle');
